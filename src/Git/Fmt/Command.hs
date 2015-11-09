@@ -18,6 +18,14 @@ module Git.Fmt.Command (
     handle,
 ) where
 
+import Control.Monad.Reader
+
+import Git.Libgit2
+import Git.Repository
+
+import System.Exit
+import System.Process
+
 
 -- | Options.
 data Options = Options {}
@@ -25,5 +33,15 @@ data Options = Options {}
 
 -- | Builds the files according to the options.
 handle :: Options -> IO ()
-handle _ = return ()
+handle _ = topLevelDir >>= \dir -> withRepository lgFactory dir $ do
+    _ <- ask
+    return ()
+
+topLevelDir :: IO FilePath
+topLevelDir = do
+    (exitCode, stdout, _) <- readCreateProcessWithExitCode (proc "git" ["rev-parse", "--show-toplevel"]) ""
+
+    when (exitCode /= ExitSuccess) $ ioError (userError "not a git repository")
+
+    return $ init stdout
 
