@@ -11,11 +11,15 @@ cache:
     directories:
     - $HOME/.stack/
 
-env:
-- ARGS=""
-- ARGS="--resolver lts-3"
-- ARGS="--resolver lts"
-- ARGS="--resolver nightly"
+matrix:
+    include:
+    - env: ARGS=""
+    - env: ARGS="--resolver lts-3"
+    - env: ARGS="--resolver lts"
+    - env: ARGS="--resolver nightly"
+    allow_failures:
+    - env: ARGS="--resolver lts"
+    - env: ARGS="--resolver nightly"
 
 before_install:
 - mkdir -p ~/.local/bin
