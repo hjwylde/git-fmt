@@ -18,13 +18,13 @@ module Git.Fmt.Command (
     handle,
 ) where
 
-import Control.Monad.Reader
+import Control.Monad.Catch      (MonadMask, bracket)
+import Control.Monad.IO.Class
+import Control.Monad.Logger
 
-import Git.Libgit2
-import Git.Repository
+import Git.Fmt.Process
 
-import System.Exit
-import System.Process
+import System.Directory
 
 
 -- | Options.
@@ -32,16 +32,12 @@ data Options = Options {}
     deriving (Eq, Show)
 
 -- | Builds the files according to the options.
-handle :: Options -> IO ()
-handle _ = topLevelDir >>= \dir -> withRepository lgFactory dir $ do
-    _ <- ask
-    return ()
+handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
+handle _ = run "git" ["rev-parse", "--show-toplevel"] >>= (`withCurrentDirectory` fmt) . init
 
-topLevelDir :: IO FilePath
-topLevelDir = do
-    (exitCode, stdout, _) <- readCreateProcessWithExitCode (proc "git" ["rev-parse", "--show-toplevel"]) ""
+fmt :: (MonadIO m, MonadLogger m) => m ()
+fmt = run "git" ["ls-files"] >>= liftIO . putStr
 
-    when (exitCode /= ExitSuccess) $ ioError (userError "not a git repository")
-
-    return $ init stdout
+withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
+withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
 
