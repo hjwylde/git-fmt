@@ -15,7 +15,8 @@ module Git.Fmt.Options.Applicative.Parser (
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
-import Data.Version (showVersion)
+import Data.List.Extra
+import Data.Version     (showVersion)
 
 import Options.Applicative
 
@@ -43,5 +44,10 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
             ]
 
 gitFmt :: Parser Options
-gitFmt = pure Options
+gitFmt = Options
+    <$> fmap (map ('.':) . wordsBy (== ',')) (strOption $ mconcat [
+        long "extensions", metavar "EXTS,...",
+        value "",
+        help "Restrict to the specified extensions"
+        ])
 
