@@ -44,6 +44,8 @@ library
         Paths_git_fmt
 
     default-language: Haskell2010
+    other-extensions:
+        TemplateHaskell
     build-depends:
         base == 4.8.*,
         directory == 1.2.*,
