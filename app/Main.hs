@@ -13,6 +13,8 @@ module Main (
     main,
 ) where
 
+import Control.Monad.Logger
+
 import Git.Fmt.Command
 import Git.Fmt.Options.Applicative.Parser
 
@@ -20,5 +22,5 @@ import Options.Applicative
 
 
 main :: IO ()
-main = customExecParser gitFmtPrefs gitFmtInfo >>= handle
+main = customExecParser gitFmtPrefs gitFmtInfo >>= \options -> runStdoutLoggingT (handle options)
 
