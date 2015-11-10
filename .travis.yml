@@ -13,13 +13,13 @@ cache:
 
 matrix:
     include:
-    - env: ARGS=
-    - env: ARGS=--resolver lts-3
-    - env: ARGS=--resolver lts
-    - env: ARGS=--resolver nightly
+    - env: ARGS=""
+    - env: ARGS="--resolver lts-3"
+    - env: ARGS="--resolver lts"
+    - env: ARGS="--resolver nightly"
     allow_failures:
-    - env: ARGS=--resolver lts
-    - env: ARGS=--resolver nightly
+    - env: ARGS="--resolver lts"
+    - env: ARGS="--resolver nightly"
 
 before_install:
 - mkdir -p ~/.local/bin
