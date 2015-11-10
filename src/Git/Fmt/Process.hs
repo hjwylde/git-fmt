@@ -34,5 +34,5 @@ run cmd args = do
 
     if exitCode == ExitSuccess
         then return stdout
-        else $(logError) (pack stderr) >> liftIO (exitWith 1)
+        else $(logError) (pack stderr) >> liftIO (exitWith $ ExitFailure 1)
 
