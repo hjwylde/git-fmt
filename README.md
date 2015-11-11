@@ -27,22 +27,51 @@ Installing `git-fmt` is easiest done using either
 Alternatively you may download a pre-compiled binary of the
     [latest release](https://github.com/hjwylde/git-fmt/releases/latest).
 
-**Using stack**:
+**Using stack:**
 
 ```bash
 stack install qux
 export PATH=$PATH:~/.local/bin
 ```
 
-**Using Cabal**:
+**Using Cabal:**
 
 ```bash
 cabal-install qux
 export PATH=$PATH:~/.cabal/bin
 ```
 
-**Using a release**:
+**Using a release:**
 
 1. Download the appropriate binary for your system from the [latest release](https://github.com/hjwylde/git-fmt/releases/latest).
 2. Place the binary somewhere it will be included in your `$PATH`.
+
+### Formatting
+
+The formatter is designed to produce pretty, readable code.
+It adheres to a few properties and styling rules to accomplish this.
+
+**Properties:**
+
+The formatter is:
+* Portable: it behaves the same across operating systems.
+* Consistent: it produces code that behaves exactly the same as before.
+* Correct: it produces valid code.
+* Idempotent: calling it multiple times results in the same output.
+
+The formatter is not necessarily _complete_ as many parsers implement strange parsing rules that
+    can't be replicated easily.
+As such, there may be inputs that it is unable to parse;
+    in these scenarios it simply outputs a warning and moves on to the next input.
+
+**Styling:**
+
+On top of providing a standard styling to all language elements,
+    the formatter performs the following changes:
+* Sorts imports and declarations where possible.
+* Limits the line length to 100 characters.
+
+Further, it ensures that:
+* Comments are maintained.
+* Line breaks between statements are maintained (up to a maximum of 1).
 
