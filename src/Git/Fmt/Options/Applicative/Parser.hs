@@ -20,7 +20,7 @@ import Data.Version     (showVersion)
 
 import Options.Applicative
 
-import Git.Fmt.Command
+import Git.Fmt
 import Git.Fmt.Version as This
 
 

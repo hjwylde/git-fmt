@@ -13,7 +13,7 @@ Utilities for working with a general language.
 module Git.Fmt.Language (
     -- * Languages
     Language(..),
-    extensions, parser,
+    languages, extensions, supportedExtensions, parser,
 ) where
 
 import Git.Fmt.Language.Json.Pretty ()
@@ -24,8 +24,14 @@ import Text.PrettyPrint.HughesPJClass
 
 data Language = Json
 
+languages :: [Language]
+languages = [Json]
+
 extensions :: Language -> [String]
-extensions Json = ["json"]
+extensions Json = map ('.':) ["json"]
+
+supportedExtensions :: [String]
+supportedExtensions = concatMap extensions languages
 
 parser :: Language -> Parser Doc
 parser Json = pPrint <$> Json.p_value

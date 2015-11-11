@@ -36,7 +36,7 @@ library
     hs-source-dirs: src/
     ghc-options:    -Wall -Werror -fno-warn-name-shadowing
     exposed-modules:
-        Git.Fmt.Command,
+        Git.Fmt,
         Git.Fmt.Options.Applicative.Parser
     other-modules:
         Git.Fmt.Language,
