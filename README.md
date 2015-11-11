@@ -61,12 +61,13 @@ The formatter is:
 
 The formatter is not necessarily _complete_ as many parsers implement strange parsing rules that
     can't be replicated easily.
-As such, there may be inputs that it is unable to parse, in which scenario it simply outputs a
-    warning and moves on to the next input.
+As such, there may be inputs that it is unable to parse;
+    in these scenarios it simply outputs a warning and moves on to the next input.
 
 **Styling:**
 
-The formatter performs the following style changes:
+On top of providing a standard styling to all language elements,
+    the formatter performs the following style changes:
 * Sorts imports and declarations where possible.
 * Limits the line length to 100 characters.
 
