@@ -67,7 +67,7 @@ As such, there may be inputs that it is unable to parse;
 **Styling:**
 
 On top of providing a standard styling to all language elements,
-    the formatter performs the following style changes:
+    the formatter performs the following changes:
 * Sorts imports and declarations where possible.
 * Limits the line length to 100 characters.
 
