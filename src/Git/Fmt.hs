@@ -38,6 +38,7 @@ import Text.Parsec
 
 -- | Options.
 data Options = Options {
+        optDryRun       :: Bool,
         optListModified :: Bool
     }
     deriving (Eq, Show)
@@ -63,7 +64,7 @@ fmt options filePath language = do
             when (input /= output) $ do
                 when (optListModified options) $ $(logInfo) (pack $ filePath ++ ": modified")
 
-                liftIO (writeFile filePath output)
+                unless (optDryRun options) $ liftIO (writeFile filePath output)
 
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action

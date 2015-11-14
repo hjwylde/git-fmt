@@ -46,6 +46,10 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
 gitFmt :: Parser Options
 gitFmt = Options
     <$> switch (mconcat [
+        long "dry-run", short 'd',
+        help "Don't write to any files (useful in combination with --list-modified)"
+        ])
+    <*> switch (mconcat [
         long "list-modified", short 'l',
         help "List any files that will be modified"
         ])
