@@ -46,19 +46,19 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
 gitFmt :: Parser Options
 gitFmt = Options
     <$> switch (mconcat [
+        long "quiet", short 'q',
+        help "Be quiet"
+        ])
+    <*> switch (mconcat [
+        long "verbose", short 'v',
+        help "Be verbose"
+        ])
+    <*> switch (mconcat [
         long "dry-run", short 'n',
         help "Doesn't perform any writes (useful with --list-ugly)"
         ])
     <*> switch (mconcat [
-        long "list-all",
-        help "List all files looked at"
-        ])
-    <*> switch (mconcat [
         long "list-ugly", short 'l',
         help "List all ugly files formatted"
-        ])
-    <*> switch (mconcat [
-        long "quiet", short 'q',
-        help "Be quiet"
         ])
 

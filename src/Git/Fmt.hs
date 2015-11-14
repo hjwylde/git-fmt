@@ -38,10 +38,10 @@ import Text.Parsec
 
 -- | Options.
 data Options = Options {
-        optDryRun       :: Bool,
-        optListAll      :: Bool,
-        optListModified :: Bool,
-        optQuiet        :: Bool
+        optQuiet    :: Bool,
+        optVerbose  :: Bool,
+        optDryRun   :: Bool,
+        optListUgly :: Bool
     }
     deriving (Eq, Show)
 
@@ -67,10 +67,9 @@ fmt options filePath language = do
 
             if input == output
                 then
-                    when (optListAll options) $ $(logInfo) (pack $ filePath ++ ": pretty")
+                    $(logDebug) $ pack (filePath ++ ": pretty")
                 else do
-                    when (optListAll options || optListModified options) $
-                        $(logInfo) (pack $ filePath ++ ": ugly" ++ (if optDryRun options then "" else " (-> pretty)"))
+                    $(logInfo) $ pack (filePath ++ ": ugly" ++ if optDryRun options then "" else " (-> pretty)")
 
                     unless (optDryRun options) $ liftIO (writeFile filePath output)
 
