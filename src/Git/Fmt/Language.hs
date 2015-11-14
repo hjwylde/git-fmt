@@ -16,8 +16,6 @@ module Git.Fmt.Language (
     languages, languageOf, extension, parser, renderWithTabs,
 ) where
 
-import Data.List (intercalate)
-
 import Git.Fmt.Language.Json.Parser as Json
 import Git.Fmt.Language.Json.Pretty ()
 
@@ -50,7 +48,7 @@ parser Json = pPrint <$> Json.topLevelValue
 
 -- | Renders the document using the default "style" and replaces any prefixed spaces with tabs.
 renderWithTabs :: Doc -> String
-renderWithTabs doc = intercalate "\n" $ map withTabs (lines $ render doc)
+renderWithTabs doc = unlines $ map withTabs (lines $ render doc)
     where
         withTabs (' ':xs) = '\t':withTabs xs
         withTabs line = line

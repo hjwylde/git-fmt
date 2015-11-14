@@ -49,7 +49,7 @@ fmt language = do
     input <- readFile inputFileName
 
     return . pack $ case runParser (parser language) () inputFileName input of
-        Left error  -> show error
+        Left error  -> show error ++ "\n"
         Right doc   -> renderWithTabs doc
     where
         inputFileName = "input" <.> extension language
