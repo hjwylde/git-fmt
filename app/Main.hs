@@ -20,7 +20,23 @@ import Git.Fmt.Options.Applicative.Parser
 
 import Options.Applicative
 
+import Prelude hiding (filter, log)
+
+import System.IO
+import System.Log.FastLogger
+
 
 main :: IO ()
-main = customExecParser gitFmtPrefs gitFmtInfo >>= \options -> runStdoutLoggingT (handle options)
+main = customExecParser gitFmtPrefs gitFmtInfo >>= \options ->
+    runLoggingT ((filter options) (handle options)) log
+
+filter :: Options -> (LoggingT m a -> LoggingT m a)
+filter options
+    | optQuiet options  = filterLogger (\_ level -> level >= LevelWarn)
+    | otherwise         = filterLogger (\_ level -> level >= LevelInfo)
+
+-- TODO (hjw): find out why there are extra quote marks here
+log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
+log _ _ LevelError msg  = putStrLn (init . drop 1 $ show (fromLogStr msg))
+log _ _ _ msg           = hPutStrLn stderr (init . drop 1 $ show (fromLogStr msg))
 
