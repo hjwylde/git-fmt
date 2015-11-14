@@ -68,7 +68,8 @@ fmt options filePath language = do
                 then do
                     when (optListAll options) $ $(logInfo) (pack $ filePath ++ ": pretty")
                 else do
-                    when (optListAll options || optListModified options) $ $(logInfo) (pack $ filePath ++ ": ugly")
+                    when (optListAll options || optListModified options) $
+                        $(logInfo) (pack $ filePath ++ ": ugly" ++ (if optDryRun options then "" else " (-> pretty)"))
 
                     unless (optDryRun options) $ liftIO (writeFile filePath output)
 
