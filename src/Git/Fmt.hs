@@ -40,7 +40,8 @@ import Text.Parsec
 data Options = Options {
         optDryRun       :: Bool,
         optListAll      :: Bool,
-        optListModified :: Bool
+        optListModified :: Bool,
+        optQuiet        :: Bool
     }
     deriving (Eq, Show)
 

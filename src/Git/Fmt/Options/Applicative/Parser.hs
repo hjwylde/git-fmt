@@ -57,4 +57,8 @@ gitFmt = Options
         long "list-ugly", short 'l',
         help "List all ugly files formatted"
         ])
+    <*> switch (mconcat [
+        long "quiet", short 'q',
+        help "Be quiet"
+        ])
 
