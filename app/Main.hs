@@ -28,9 +28,9 @@ import System.Log.FastLogger
 
 main :: IO ()
 main = customExecParser gitFmtPrefs gitFmtInfo >>= \options ->
-    runLoggingT ((filter options) (handle options)) log
+    runLoggingT (filter options (handle options)) log
 
-filter :: Options -> (LoggingT m a -> LoggingT m a)
+filter :: Options -> LoggingT m a -> LoggingT m a
 filter options
     | optQuiet options  = filterLogger (\_ level -> level >= LevelWarn)
     | otherwise         = filterLogger (\_ level -> level >= LevelInfo)
