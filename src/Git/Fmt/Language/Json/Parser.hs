@@ -19,6 +19,7 @@ import Text.JSON.Parsec
 import Text.JSON.Types
 
 
+-- | Parser for a top level JSON value (either an array or object).
 topLevelValue :: Parser JSValue
 topLevelValue = spaces >> topLevelValue'
     where

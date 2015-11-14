@@ -43,6 +43,7 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
             help "Show this binary's version (without the prefix)"
             ]
 
+-- | An options parser.
 gitFmt :: Parser Options
 gitFmt = Options
     <$> fmap (map ('.':) . wordsBy (== ',')) (strOption $ mconcat [

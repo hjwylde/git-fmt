@@ -70,12 +70,15 @@ test-suite git-fmt-test-json
     main-is:        Main.hs
     hs-source-dirs: test/json/app/, test/shared/src/
     ghc-options:    -threaded -Wall -Werror -fno-warn-name-shadowing
+    other-modules:
+        Git.Fmt.Test
 
     default-language: Haskell2010
     build-depends:
         base == 4.8.*,
         bytestring == 0.10.*,
         directory == 1.2.*,
+        extra == 1.4.*,
         filepath == 1.4.*,
         git-fmt,
         parsec == 3.1.*,

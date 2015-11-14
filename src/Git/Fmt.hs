@@ -49,6 +49,7 @@ handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurr
             | null $ optExtensions options  = supportedExtensions
             | otherwise                     = optExtensions options `intersect` supportedExtensions
 
+
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
 
