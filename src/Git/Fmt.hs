@@ -55,7 +55,8 @@ fmt language filePath = do
 
     case runParser (parser language) () filePath input of
         Left error  -> $(logWarn) $ pack (show error)
-        Right doc   -> liftIO $ putStrLn (renderWithTabs doc)
+        Right doc   -> let output = renderWithTabs doc
+            in when (input /= output) $ liftIO (writeFile filePath output)
 
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
