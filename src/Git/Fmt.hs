@@ -39,6 +39,7 @@ import Text.Parsec
 -- | Options.
 data Options = Options {
         optDryRun       :: Bool,
+        optListAll      :: Bool,
         optListModified :: Bool
     }
     deriving (Eq, Show)
@@ -57,14 +58,19 @@ fmt options filePath language = do
     input <- liftIO $ readFile filePath
 
     case runParser (parser language) () filePath input of
-        Left error  -> $(logWarn) $ pack (show error)
+        Left error  -> do
+            $(logWarn)  $ pack (filePath ++ ": parse error")
+            $(logDebug) $ pack (show error)
         Right doc   -> do
             let output = renderWithTabs doc
 
-            when (input /= output) $ do
-                when (optListModified options) $ $(logInfo) (pack $ filePath ++ ": modified")
+            if (input == output)
+                then do
+                    when (optListAll options) $ $(logInfo) (pack $ filePath ++ ": pretty")
+                else do
+                    when (optListAll options || optListModified options) $ $(logInfo) (pack $ filePath ++ ": ugly")
 
-                unless (optDryRun options) $ liftIO (writeFile filePath output)
+                    unless (optDryRun options) $ liftIO (writeFile filePath output)
 
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
