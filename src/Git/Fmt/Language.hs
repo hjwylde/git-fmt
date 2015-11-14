@@ -13,12 +13,15 @@ Utilities for working with a general language.
 module Git.Fmt.Language (
     -- * Languages
     Language(..),
-    languages, extensions, supportedExtensions, parser,
+    languages, extensions, supportedExtensions, parser, renderWithTabs,
 ) where
 
+import Data.List (intercalate)
+
+import Git.Fmt.Language.Json.Parser as Json
 import Git.Fmt.Language.Json.Pretty ()
 
-import Text.JSON.Parsec                 as Json
+import Text.Parsec.String
 import Text.PrettyPrint.HughesPJClass
 
 
@@ -34,5 +37,11 @@ supportedExtensions :: [String]
 supportedExtensions = concatMap extensions languages
 
 parser :: Language -> Parser Doc
-parser Json = pPrint <$> Json.p_value
+parser Json = pPrint <$> Json.topLevelValue
+
+renderWithTabs :: Doc -> String
+renderWithTabs doc = intercalate "\n" $ map withTabs (lines $ render doc)
+    where
+        withTabs (' ':xs) = '\t':withTabs xs
+        withTabs line = line
 

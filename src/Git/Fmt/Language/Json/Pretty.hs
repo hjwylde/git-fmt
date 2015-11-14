@@ -21,10 +21,15 @@ import Text.PrettyPrint.HughesPJClass
 
 
 instance Pretty JSValue where
-    pPrint (JSArray values)     = char '[' <> fsep (punctuate (char ',') (map pPrint values)) <> char ']'
+    pPrint (JSArray values)     = cat [char '[', nest 1 (sep $ punctuate (char ',') (map pPrint values)), char ']']
     pPrint (JSBool bool)        = text $ lower (show bool)
     pPrint (JSNull)             = text "null"
-    pPrint (JSObject obj)       = char '{' <> fsep (map (\(key, value) -> text key <> char ':' <+> pPrint value) (fromJSObject obj)) <> char '}'
-    pPrint (JSRational _ rat)   = text $ show rat
-    pPrint (JSString str)       = char '"' <> text (show str) <> char '"'
+    pPrint (JSObject obj)
+        | null keyValues    = text "{}"
+        | otherwise         = char '{' $+$ nest 1 (vcat $ punctuate (char ',') keyValueDocs) $+$ char '}'
+        where
+            keyValueDocs    = map (\(key, value) -> char '"' <> text key <> text "\":" <+> pPrint value) keyValues
+            keyValues       = fromJSObject obj
+    pPrint (JSRational _ rat)   = text $ show (fromRational rat :: Double)
+    pPrint (JSString str)       = char '"' <> text (fromJSString str) <> char '"'
 
