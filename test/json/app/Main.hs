@@ -13,13 +13,12 @@ module Main (
     main,
 ) where
 
+import Git.Fmt.Language
+import Git.Fmt.Test
+
 import Test.Tasty
 
 
 main :: IO ()
-main = defaultMain =<< tests
-
-
-tests :: IO TestTree
-tests = return $ testGroup "Tests" []
+main = defaultMain =<< tests Json
 

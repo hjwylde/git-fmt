@@ -15,7 +15,7 @@ module Main (
 
 import Control.Monad.Logger
 
-import Git.Fmt.Command
+import Git.Fmt
 import Git.Fmt.Options.Applicative.Parser
 
 import Options.Applicative

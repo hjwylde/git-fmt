@@ -75,3 +75,10 @@ Further, it ensures that:
 * Comments are maintained.
 * Line breaks between statements are maintained (up to a maximum of 1).
 
+### Languages
+
+The following languages are supported:
+* JSON
+
+For examples on how a specific language is formatted, see the test examples.
+

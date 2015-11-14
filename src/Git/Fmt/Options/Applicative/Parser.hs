@@ -15,12 +15,11 @@ module Git.Fmt.Options.Applicative.Parser (
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
-import Data.List.Extra
-import Data.Version     (showVersion)
+import Data.Version (showVersion)
 
 import Options.Applicative
 
-import Git.Fmt.Command
+import Git.Fmt
 import Git.Fmt.Version as This
 
 
@@ -43,11 +42,7 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
             help "Show this binary's version (without the prefix)"
             ]
 
+-- | An options parser.
 gitFmt :: Parser Options
-gitFmt = Options
-    <$> fmap (map ('.':) . wordsBy (== ',')) (strOption $ mconcat [
-        long "extensions", metavar "EXTS,...",
-        value "",
-        help "Restrict to the specified extensions"
-        ])
+gitFmt = pure Options
 
