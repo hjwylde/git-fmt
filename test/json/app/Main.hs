@@ -32,5 +32,5 @@ tests = do
     testDirs    <- filter ((/= '.') . head) <$> getDirectoryContents testsDir
     testTrees   <- mapM (test Json . combine testsDir) testDirs
 
-    return $ testGroup "Tests" testTrees
+    return $ testGroup "JSON tests" testTrees
 
