@@ -40,12 +40,9 @@ tests language = do
 
 
 test :: Language -> String -> IO TestTree
-test language dir = return $ goldenVsString name
-    (dir </> "expected-output" <.> ext)
+test language dir = return $ goldenVsString (takeFileName dir)
+    (dir </> "expected-output" <.> extension language)
     (withCurrentDirectory dir $ fmt language)
-    where
-        name    = takeFileName dir
-        ext     = head $ extensions language
 
 fmt :: Language -> IO ByteString
 fmt language = do
@@ -55,8 +52,7 @@ fmt language = do
         Left error  -> show error
         Right doc   -> renderWithTabs doc
     where
-        inputFileName = "input" <.> ext
-        ext = head $ extensions language
+        inputFileName = "input" <.> extension language
 
 withCurrentDirectory :: FilePath -> IO a -> IO a
 withCurrentDirectory dir action = bracket getCurrentDirectory setCurrentDirectory $ \_ -> setCurrentDirectory dir >> action

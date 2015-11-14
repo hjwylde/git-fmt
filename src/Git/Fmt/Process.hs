@@ -20,7 +20,7 @@ module Git.Fmt.Process (
 import Control.Monad.IO.Class
 import Control.Monad.Logger
 
-import Data.Text
+import Data.Text hiding (unwords)
 
 import System.Exit
 import System.Process as System
@@ -30,6 +30,8 @@ import System.Process as System
 --   Depending on the exit code, either logs the stderr and exits fast or returns the stdout.
 run :: (MonadIO m, MonadLogger m) => FilePath -> [String] -> m String
 run cmd args = do
+    $(logDebug) $ pack (unwords $ cmd:args)
+
     (exitCode, stdout, stderr) <- liftIO $ System.readProcessWithExitCode cmd args ""
 
     if exitCode == ExitSuccess

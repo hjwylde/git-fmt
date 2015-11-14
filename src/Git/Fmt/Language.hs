@@ -13,7 +13,7 @@ Utilities for working with a general language.
 module Git.Fmt.Language (
     -- * Languages
     Language(..),
-    languages, extensions, supportedExtensions, parser, renderWithTabs,
+    languages, languageOf, extension, parser, renderWithTabs,
 ) where
 
 import Data.List (intercalate)
@@ -27,20 +27,22 @@ import Text.PrettyPrint.HughesPJClass
 
 -- | Supported languages.
 data Language = Json
-    deriving (Eq, Show)
+    deriving (Eq, Ord, Show)
 
 
 -- | Array of supported languages.
 languages :: [Language]
 languages = [Json]
 
--- | Gets the known extensions for a language.
-extensions :: Language -> [String]
-extensions Json = map ('.':) ["json"]
+-- | Gets the language of an extension.
+languageOf :: String -> Maybe Language
+languageOf ext
+    | ext `elem` [".json"]  = Just Json
+    | otherwise             = Nothing
 
--- | List of supported extensions.
-supportedExtensions :: [String]
-supportedExtensions = concatMap extensions languages
+-- | Gets the default extension of a language.
+extension :: Language -> String
+extension Json = "json"
 
 -- | Gets the parser for a language.
 parser :: Language -> Parser Doc
