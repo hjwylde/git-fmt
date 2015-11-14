@@ -44,5 +44,9 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
 
 -- | An options parser.
 gitFmt :: Parser Options
-gitFmt = pure Options
+gitFmt = Options
+    <$> switch (mconcat [
+        long "list-modified", short 'l',
+        help "List any files that will be modified"
+        ])
 
