@@ -64,8 +64,8 @@ fmt options filePath language = do
         Right doc   -> do
             let output = renderWithTabs doc
 
-            if (input == output)
-                then do
+            if input == output
+                then
                     when (optListAll options) $ $(logInfo) (pack $ filePath ++ ": pretty")
                 else do
                     when (optListAll options || optListModified options) $
