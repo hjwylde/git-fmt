@@ -32,8 +32,10 @@ main = customExecParser gitFmtPrefs gitFmtInfo >>= \options ->
 
 filter :: Options -> LoggingT m a -> LoggingT m a
 filter options
-    | optQuiet options  = filterLogger (\_ level -> level >= LevelError)
-    | otherwise         = filterLogger (\_ level -> level >= LevelInfo)
+    | optQuiet options      = filterLogger (\_ level -> level >= LevelError)
+    | optVerbose options    = filterLogger (\_ level -> level >= LevelDebug)
+    | optListUgly options   = filterLogger (\_ level -> level >= LevelInfo)
+    | otherwise             = filterLogger (\_ level -> level >= LevelWarn)
 
 -- TODO (hjw): find out why there are extra quote marks here
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
