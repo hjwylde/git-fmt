@@ -38,17 +38,18 @@ import Text.Parsec
 
 -- | Options.
 data Options = Options {
-        optQuiet    :: Bool,
-        optVerbose  :: Bool,
-        optDryRun   :: Bool,
-        optListUgly :: Bool
+        optQuiet        :: Bool,
+        optVerbose      :: Bool,
+        optDryRun       :: Bool,
+        optListUgly     :: Bool,
+        argFilePaths    :: [FilePath]
     }
     deriving (Eq, Show)
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- lines <$> run "git" ["ls-files"]
+    filePaths <- if null (argFilePaths options) then lines <$> run "git" ["ls-files"] else return (argFilePaths options)
 
     filterM (liftIO . doesFileExist) filePaths >>= mapM_ (\filePath ->
         maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
