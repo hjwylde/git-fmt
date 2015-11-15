@@ -50,8 +50,8 @@ handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
     filePaths <- lines <$> run "git" ["ls-files"]
 
-    forM_ filePaths $ \filePath ->
-        maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath)
+    filterM (liftIO . doesFileExist) filePaths >>= mapM_ (\filePath ->
+        maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
 
 
 fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
