@@ -14,7 +14,8 @@ Pretty instances for the JSON language.
 
 module Git.Fmt.Language.Json.Pretty where
 
-import Data.List.Extra (lower)
+import Data.List.Extra  (lower)
+import Data.Ratio       (denominator, numerator)
 
 import Text.JSON.Types
 import Text.PrettyPrint.HughesPJClass
@@ -30,6 +31,8 @@ instance Pretty JSValue where
         where
             keyValueDocs    = map (\(key, value) -> char '"' <> text key <> text "\":" <+> pPrint value) keyValues
             keyValues       = fromJSObject obj
-    pPrint (JSRational _ rat)   = text $ show (fromRational rat :: Double)
+    pPrint (JSRational _ rat)
+        | denominator rat == 1  = text $ show (numerator rat)
+        | otherwise             = text $ show (fromRational rat :: Double)
     pPrint (JSString str)       = char '"' <> text (fromJSString str) <> char '"'
 
