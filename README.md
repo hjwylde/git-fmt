@@ -1,6 +1,6 @@
 # git-fmt
 
-[![Project Status: Concept - Minimal or no implementation has been done yet.](http://www.repostatus.org/badges/1.0.0/concept.svg)](http://www.repostatus.org/#concept)
+[![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/1.0.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/hjwylde/git-fmt.svg?branch=master)](https://travis-ci.org/hjwylde/git-fmt)
 [![Release](https://img.shields.io/github/release/hjwylde/git-fmt.svg)](https://github.com/hjwylde/git-fmt/releases/latest)
 
