@@ -15,6 +15,7 @@ module Git.Fmt.Options.Applicative.Parser (
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
+import Data.List    (nub)
 import Data.Version (showVersion)
 
 import Options.Applicative
@@ -61,4 +62,7 @@ gitFmt = Options
         long "list-ugly", short 'l',
         help "List all ugly files formatted"
         ])
+    <*> fmap nub (many $ strArgument (mconcat [
+        metavar "-- FILES..."
+        ]))
 
