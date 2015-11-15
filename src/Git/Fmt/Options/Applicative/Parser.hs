@@ -55,12 +55,12 @@ gitFmt = Options
         help "Be verbose"
         ])
     <*> switch (mconcat [
-        long "dry-run", short 'n',
-        help "Doesn't perform any writes (useful with --list-ugly)"
+        long "list-files", short 'l',
+        help "List files and their state"
         ])
     <*> switch (mconcat [
-        long "list-ugly", short 'l',
-        help "List all ugly files formatted"
+        long "dry-run", short 'n',
+        help "Don't perform any writes (useful with --list-files)"
         ])
     <*> fmap nub (many $ strArgument (mconcat [
         metavar "-- FILES..."

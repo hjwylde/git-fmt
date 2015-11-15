@@ -40,8 +40,8 @@ import Text.Parsec
 data Options = Options {
         optQuiet        :: Bool,
         optVerbose      :: Bool,
+        optListFiles    :: Bool,
         optDryRun       :: Bool,
-        optListUgly     :: Bool,
         argFilePaths    :: [FilePath]
     }
     deriving (Eq, Show)
@@ -70,7 +70,7 @@ fmt options filePath language = do
                 then
                     $(logDebug) $ pack (filePath ++ ": pretty")
                 else do
-                    $(logInfo) $ pack (filePath ++ ": ugly" ++ if optDryRun options then "" else " (-> pretty)")
+                    $(logInfo) $ pack (filePath ++ if optDryRun options then ": ugly" else ": prettified")
 
                     unless (optDryRun options) $ liftIO (writeFile filePath output)
 
