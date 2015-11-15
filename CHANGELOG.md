@@ -8,7 +8,7 @@
 
 #### v0.1.0.0
 
-This is first release of teh `git-fmt` binary!
+This is first release of the `git-fmt` binary!
 It provides a basic syntax for formatting files in a git repository.
-Currently JSON is supported, with more languages to come.
+Currently only JSON is supported.
 
