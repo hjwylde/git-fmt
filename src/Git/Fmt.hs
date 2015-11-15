@@ -20,8 +20,8 @@ module Git.Fmt (
     handle,
 ) where
 
-import Control.Monad.Extra
 import Control.Monad.Catch      (MonadMask, bracket)
+import Control.Monad.Extra
 import Control.Monad.IO.Class
 import Control.Monad.Logger
 
@@ -29,6 +29,8 @@ import Data.Text (pack)
 
 import Git.Fmt.Language
 import Git.Fmt.Process
+
+import Prelude hiding (read)
 
 import System.Directory
 import System.FilePath
@@ -49,37 +51,51 @@ data Options = Options {
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths' <- filePaths options
+    filePaths' <- filePaths
 
     forM_ filePaths' $ \filePath ->
-        ifM (liftIO $ doesFileExist filePath)
-            (maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
-            ($(logWarn) $ pack (filePath ++ ": not found"))
+        whenJust (languageOf $ takeExtension filePath) $ \language ->
+            ifM (liftIO $ doesFileExist filePath)
+                (handle' options filePath language)
+                ($(logWarn) $ pack (filePath ++ ": not found"))
+    where
+        filePaths
+            | null (argFilePaths options)   = lines <$> run "git" ["ls-files"]
+            | otherwise                     = return $ argFilePaths options
 
+handle' :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
+handle' options filePath language = do
+    (ugly, mPretty) <- read filePath language
 
-filePaths :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m [FilePath]
-filePaths options
-    | null (argFilePaths options)   = lines <$> run "git" ["ls-files"]
-    | otherwise                     = return $ argFilePaths options
+    whenJust mPretty $ \pretty -> if ugly == pretty
+        then $(logDebug) $ pack (filePath ++ ": pretty")
+        else action filePath ugly pretty
+    where
+        action = if optDryRun options then dryRun else fmt
 
-fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
-fmt options filePath language = do
+fmt :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
+fmt filePath _ pretty = do
+    $(logInfo) $ pack (filePath ++ ": prettified")
+
+    liftIO $ writeFile filePath pretty
+
+dryRun :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
+dryRun filePath _ _ = $(logInfo) $ pack (filePath ++ ": ugly")
+
+--patch :: (MonadIO m, MonadLogger m) => m ()
+--patch = undefined
+
+read :: (MonadIO m, MonadLogger m) => FilePath -> Language -> m (String, Maybe String)
+read filePath language = do
     input <- liftIO $ readFile filePath
 
     case runParser (parser language) () filePath input of
         Left error  -> do
             $(logWarn)  $ pack (filePath ++ ": parse error")
             $(logDebug) $ pack (show error)
-        Right doc   -> do
-            let output = renderWithTabs doc
 
-            if input == output
-                then
-                    $(logDebug) $ pack (filePath ++ ": pretty")
-                else do
-                    $(logInfo) $ pack (filePath ++ if optDryRun options then ": ugly" else ": prettified")
-
-                    unless (optDryRun options) $ liftIO (writeFile filePath output)
+            return (input, Nothing)
+        Right doc   -> return (input, Just $ renderWithTabs doc)
 
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
