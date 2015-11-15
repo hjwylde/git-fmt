@@ -20,7 +20,7 @@ module Git.Fmt (
     handle,
 ) where
 
-import Control.Monad
+import Control.Monad.Extra
 import Control.Monad.Catch      (MonadMask, bracket)
 import Control.Monad.IO.Class
 import Control.Monad.Logger
@@ -49,11 +49,18 @@ data Options = Options {
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- if null (argFilePaths options) then lines <$> run "git" ["ls-files"] else return (argFilePaths options)
+    filePaths' <- filePaths options
 
-    filterM (liftIO . doesFileExist) filePaths >>= mapM_ (\filePath ->
-        maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
+    forM_ filePaths' $ \filePath ->
+        ifM (liftIO $ doesFileExist filePath)
+            (maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
+            ($(logWarn) $ pack (filePath ++ ": not found"))
 
+
+filePaths :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m [FilePath]
+filePaths options
+    | null (argFilePaths options)   = lines <$> run "git" ["ls-files"]
+    | otherwise                     = return $ argFilePaths options
 
 fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
 fmt options filePath language = do
