@@ -2,6 +2,10 @@
 
 #### Upcoming in master
 
+#### v0.1.0.2
+
+* Fixed a bug where UTF-8 characters in strings weren't printed properly.
+
 #### v0.1.0.1
 
 * Fixed a bug where integers were printed as rationals.
