@@ -14,7 +14,7 @@ Options and handler for the git-fmt command.
 
 module Git.Fmt (
     -- * Options
-    Options(..),
+    Options(..), Mode(..),
 
     -- * Handle
     handle,
@@ -42,11 +42,15 @@ import Text.Parsec
 data Options = Options {
         optQuiet        :: Bool,
         optVerbose      :: Bool,
-        optListFiles    :: Bool,
-        optDryRun       :: Bool,
+        optMode         :: Mode,
         argFilePaths    :: [FilePath]
     }
     deriving (Eq, Show)
+
+-- | Run mode.
+data Mode = Normal | DryRun
+    deriving (Eq, Show)
+
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
@@ -56,34 +60,33 @@ handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurr
     forM_ filePaths' $ \filePath ->
         whenJust (languageOf $ takeExtension filePath) $ \language ->
             ifM (liftIO $ doesFileExist filePath)
-                (handle' options filePath language)
+                (fmt options filePath language)
                 ($(logWarn) $ pack (filePath ++ ": not found"))
     where
         filePaths
             | null (argFilePaths options)   = lines <$> run "git" ["ls-files"]
             | otherwise                     = return $ argFilePaths options
 
-handle' :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
-handle' options filePath language = do
+fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
+fmt options filePath language = do
     (ugly, mPretty) <- read filePath language
 
     whenJust mPretty $ \pretty -> if ugly == pretty
         then $(logDebug) $ pack (filePath ++ ": pretty")
         else action filePath ugly pretty
     where
-        action = if optDryRun options then dryRun else fmt
+        action = case optMode options of
+            Normal -> normal
+            DryRun -> dryRun
 
-fmt :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
-fmt filePath _ pretty = do
+normal :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
+normal filePath _ pretty = do
     $(logInfo) $ pack (filePath ++ ": prettified")
 
     liftIO $ writeFile filePath pretty
 
 dryRun :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
 dryRun filePath _ _ = $(logInfo) $ pack (filePath ++ ": ugly")
-
---patch :: (MonadIO m, MonadLogger m) => m ()
---patch = undefined
 
 read :: (MonadIO m, MonadLogger m) => FilePath -> Language -> m (String, Maybe String)
 read filePath language = do

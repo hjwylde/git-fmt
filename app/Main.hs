@@ -43,8 +43,7 @@ filter options = filterLogger (\_ level -> level >= minLevel)
         minLevel
             | optQuiet options      = LevelError
             | optVerbose options    = LevelDebug
-            | optListFiles options  = LevelInfo
-            | otherwise             = LevelWarn
+            | otherwise             = LevelInfo
 
 -- TODO (hjw): find out why there are extra quote marks here
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
