@@ -19,8 +19,8 @@ import Control.Monad.Logger
 
 import              Data.ByteString.Char8   (ByteString)
 import qualified    Data.ByteString.Char8   as BS
-import              Data.List.Extra         (lower)
-import              Data.Time               (getZonedTime)
+import              Data.List.Extra         (dropEnd, lower)
+import              Data.Time               (getZonedTime, formatTime, defaultTimeLocale)
 
 import Git.Fmt
 import Git.Fmt.Options.Applicative.Parser
@@ -43,8 +43,7 @@ filter options = filterLogger (\_ level -> level >= minLevel)
         minLevel
             | optQuiet options      = LevelError
             | optVerbose options    = LevelDebug
-            | optListUgly options   = LevelInfo
-            | otherwise             = LevelWarn
+            | otherwise             = LevelInfo
 
 -- TODO (hjw): find out why there are extra quote marks here
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
@@ -54,9 +53,9 @@ log _ _ level msg = BS.hPutStrLn h (fromLogStr msg)
 
 verboseLog :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 verboseLog _ _ level msg = do
-    timestamp <- getZonedTime >>= \time -> return . BS.pack $ "[" ++ show time ++ "]"
+    timestamp <- formatTime defaultTimeLocale "%F %T.%q" <$> getZonedTime
 
-    BS.hPutStrLn h (BS.unwords [timestamp, formatLevel level, fromLogStr msg])
+    BS.hPutStrLn h (BS.unwords [BS.pack $ "[" ++ dropEnd 6 timestamp ++ "]", formatLevel level, fromLogStr msg])
     where
         h = if level == LevelError then stderr else stdout
 

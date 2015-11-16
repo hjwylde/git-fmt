@@ -19,6 +19,7 @@ import Data.List    (nub)
 import Data.Version (showVersion)
 
 import Options.Applicative
+import Options.Applicative.Types (readerAsk)
 
 import Git.Fmt
 import Git.Fmt.Version as This
@@ -54,15 +55,17 @@ gitFmt = Options
         long "verbose", short 'v',
         help "Be verbose"
         ])
-    <*> switch (mconcat [
-        long "dry-run", short 'n',
-        help "Doesn't perform any writes (useful with --list-ugly)"
-        ])
-    <*> switch (mconcat [
-        long "list-ugly", short 'l',
-        help "List all ugly files formatted"
+    <*> modeOption (mconcat [
+        long "mode", short 'm', metavar "MODE",
+        value Normal, showDefaultWith $ const "normal",
+        help "Specify the mode as either `normal' or `dry-run'"
         ])
     <*> fmap nub (many $ strArgument (mconcat [
         metavar "-- FILES..."
         ]))
+    where
+        modeOption = option $ readerAsk >>= \opt -> case opt of
+            "normal"    -> return Normal
+            "dry-run"   -> return DryRun
+            _           -> readerError $ "unrecognised mode `" ++ opt ++ "'"
 
