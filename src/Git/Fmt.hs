@@ -25,7 +25,8 @@ import Control.Monad.Extra
 import Control.Monad.IO.Class
 import Control.Monad.Logger
 
-import Data.Text (pack)
+import Data.Text        (pack)
+import Data.List.Extra  (linesBy, nub)
 
 import Git.Fmt.Language
 import Git.Fmt.Process
@@ -42,6 +43,7 @@ import Text.Parsec
 data Options = Options {
         optQuiet        :: Bool,
         optVerbose      :: Bool,
+        optNull         :: Bool,
         optMode         :: Mode,
         argFilePaths    :: [FilePath]
     }
@@ -64,8 +66,9 @@ handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurr
                 ($(logWarn) $ pack (filePath ++ ": not found"))
     where
         filePaths
-            | null (argFilePaths options)   = lines <$> run "git" ["ls-files"]
-            | otherwise                     = return $ argFilePaths options
+            | null (argFilePaths options)   = linesBy (== '\0') <$> run "git" ["ls-files", "-z"]
+            | optNull options               = return . nub $ concatMap (linesBy (== '\0')) (argFilePaths options)
+            | otherwise                     = return . nub $ argFilePaths options
 
 fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
 fmt options filePath language = do

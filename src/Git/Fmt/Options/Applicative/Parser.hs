@@ -15,7 +15,6 @@ module Git.Fmt.Options.Applicative.Parser (
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
-import Data.List    (nub)
 import Data.Version (showVersion)
 
 import Options.Applicative
@@ -55,14 +54,18 @@ gitFmt = Options
         long "verbose", short 'v',
         help "Be verbose"
         ])
+    <*> switch (mconcat [
+        long "null", short '0',
+        help "Input files are delimited by a null terminator instead of white space"
+        ])
     <*> modeOption (mconcat [
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
         help "Specify the mode as either `normal' or `dry-run'"
         ])
-    <*> fmap nub (many $ strArgument (mconcat [
+    <*> many (strArgument $ mconcat [
         metavar "-- FILES..."
-        ]))
+        ])
     where
         modeOption = option $ readerAsk >>= \opt -> case opt of
             "normal"    -> return Normal
