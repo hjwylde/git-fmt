@@ -2,6 +2,12 @@
 
 #### Upcoming in master
 
+*Minor*
+* Added a null terminator option (`-0` or `--null`). ([#27](https://github.com/hjwylde/git-fmt/issues/27))
+
+*Revisions*
+* Updated internal use of `git ls-files` to use the null terminator option. ([#27](https://github.com/hjwylde/git-fmt/issues/27))
+
 #### v0.1.0.2
 
 * Fixed a bug where UTF-8 characters in strings weren't printed properly.
