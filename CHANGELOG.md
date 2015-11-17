@@ -3,10 +3,15 @@
 #### Upcoming in master
 
 *Major*
-* Added `--mode` option (includes the now removed `--list-ugly` and `--dry-run`). ([#29](https://github.com/hjwylde/git-fmt/issues/29))
+* Removed `--list-ugly` and `--dry-run` options. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
+
+*Minor*
+* Added `--mode` option (either `normal` or `dry-run`). ([#29](https://github.com/hjwylde/git-fmt/issues/29))
+* Added `--null` option (use the null terminator as the delimiter for inputs). ([#27](https://github.com/hjwylde/git-fmt/issues/27))
 
 *Revisions*
 * Added a warning for when files aren't found. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
+* Updated internal use of `git ls-files` to use the null terminator option. ([#27](https://github.com/hjwylde/git-fmt/issues/27))
 
 #### v0.1.0.2
 
