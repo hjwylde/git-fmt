@@ -15,6 +15,7 @@ module Main (
     main,
 ) where
 
+import Control.Monad
 import Control.Monad.Logger
 
 import              Data.ByteString.Char8   (ByteString)
@@ -45,7 +46,6 @@ filter options = filterLogger (\_ level -> level >= minLevel)
             Default -> LevelInfo
             Verbose -> LevelDebug
 
--- TODO (hjw): find out why there are extra quote marks here
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 log _ _ level msg = BS.hPutStrLn h (fromLogStr msg)
     where
@@ -55,7 +55,8 @@ verboseLog :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 verboseLog _ _ level msg = do
     timestamp <- formatTime defaultTimeLocale "%F %T.%q" <$> getZonedTime
 
-    BS.hPutStrLn h (BS.unwords [BS.pack $ "[" ++ dropEnd 6 timestamp ++ "]", formatLevel level, fromLogStr msg])
+    forM_ (BS.lines $ fromLogStr msg) $ \line ->
+        BS.hPutStrLn h (BS.unwords [BS.pack $ "[" ++ dropEnd 6 timestamp ++ "]", formatLevel level, line])
     where
         h = if level == LevelError then stderr else stdout
 
