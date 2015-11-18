@@ -4,6 +4,7 @@
 
 *Major*
 * Removed `--list-ugly` and `--dry-run` options. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
+* Restricted use of `--quiet` and `--verbose` at the same time. ([#35](https://github.com/hjwylde/git-fmt/issues/35))
 
 *Minor*
 * Added `--mode` option (either `normal` or `dry-run`). ([#29](https://github.com/hjwylde/git-fmt/issues/29))

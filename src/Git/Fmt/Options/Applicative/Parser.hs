@@ -46,14 +46,16 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
 -- | An options parser.
 gitFmt :: Parser Options
 gitFmt = Options
-    <$> switch (mconcat [
-        long "quiet", short 'q',
-        help "Be quiet"
-        ])
-    <*> switch (mconcat [
-        long "verbose", short 'v',
-        help "Be verbose"
-        ])
+    <$> (
+        flag' Quiet (mconcat [
+            long "quiet", short 'q', hidden,
+            help "Be quiet"
+            ])
+        <|> flag Default Verbose (mconcat [
+            long "verbose", short 'v', hidden,
+            help "Be verbose"
+            ])
+        )
     <*> switch (mconcat [
         long "null", short '0',
         help "Input files are delimited by a null terminator instead of white space"

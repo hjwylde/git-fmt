@@ -35,15 +35,15 @@ import System.Log.FastLogger
 
 main :: IO ()
 main = customExecParser gitFmtPrefs gitFmtInfo >>= \options ->
-    runLoggingT (filter options (handle options)) (if optVerbose options then verboseLog else log)
+    runLoggingT (filter options (handle options)) (if optChatty options == Verbose then verboseLog else log)
 
 filter :: Options -> LoggingT m a -> LoggingT m a
 filter options = filterLogger (\_ level -> level >= minLevel)
     where
-        minLevel
-            | optQuiet options      = LevelError
-            | optVerbose options    = LevelDebug
-            | otherwise             = LevelInfo
+        minLevel = case optChatty options of
+            Quiet   -> LevelError
+            Default -> LevelInfo
+            Verbose -> LevelDebug
 
 -- TODO (hjw): find out why there are extra quote marks here
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
