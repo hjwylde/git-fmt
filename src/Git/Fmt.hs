@@ -14,7 +14,7 @@ Options and handler for the git-fmt command.
 
 module Git.Fmt (
     -- * Options
-    Options(..), Mode(..),
+    Options(..), Chatty(..), Mode(..),
 
     -- * Handle
     handle,
@@ -41,12 +41,15 @@ import Text.Parsec
 
 -- | Options.
 data Options = Options {
-        optQuiet    :: Bool,
-        optVerbose  :: Bool,
+        optChatty   :: Chatty,
         optNull     :: Bool,
         optMode     :: Mode,
         argPaths    :: [FilePath]
     }
+    deriving (Eq, Show)
+
+-- | Chattyness level.
+data Chatty = Default | Quiet | Verbose
     deriving (Eq, Show)
 
 -- | Run mode.
