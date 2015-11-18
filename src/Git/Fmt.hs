@@ -41,11 +41,11 @@ import Text.Parsec
 
 -- | Options.
 data Options = Options {
-        optQuiet        :: Bool,
-        optVerbose      :: Bool,
-        optNull         :: Bool,
-        optMode         :: Mode,
-        argFilePaths    :: [FilePath]
+        optQuiet    :: Bool,
+        optVerbose  :: Bool,
+        optNull     :: Bool,
+        optMode     :: Mode,
+        argPaths    :: [FilePath]
     }
     deriving (Eq, Show)
 
@@ -57,18 +57,18 @@ data Mode = Normal | DryRun
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths' <- filePaths
+    filePaths <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (getRecursiveContents path) (return [path]))
 
-    forM_ filePaths' $ \filePath ->
+    forM_ filePaths $ \filePath ->
         whenJust (languageOf $ takeExtension filePath) $ \language ->
             ifM (liftIO $ doesFileExist filePath)
                 (fmt options filePath language)
                 ($(logWarn) $ pack (filePath ++ ": not found"))
     where
-        filePaths
-            | null (argFilePaths options)   = linesBy (== '\0') <$> run "git" ["ls-files", "-z"]
-            | optNull options               = return . nub $ concatMap (linesBy (== '\0')) (argFilePaths options)
-            | otherwise                     = return . nub $ argFilePaths options
+        paths
+            | null (argPaths options)   = linesBy (== '\0') <$> run "git" ["ls-files", "-z"]
+            | optNull options           = return $ concatMap (linesBy (== '\0')) (argPaths options)
+            | otherwise                 = return $ argPaths options
 
 fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
 fmt options filePath language = do
@@ -105,4 +105,14 @@ read filePath language = do
 
 withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
 withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
+
+getRecursiveContents :: MonadIO m => FilePath -> m [FilePath]
+getRecursiveContents dir = do
+    paths <- filter (`notElem` [".", ".."]) <$> liftIO (getDirectoryContents dir)
+
+    concat <$> forM paths (\path ->
+        ifM (liftIO $ doesDirectoryExist (dir </> path))
+            (getRecursiveContents $ dir </> path)
+            (return [dir </> path])
+        )
 

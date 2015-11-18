@@ -64,7 +64,7 @@ gitFmt = Options
         help "Specify the mode as either `normal' or `dry-run'"
         ])
     <*> many (strArgument $ mconcat [
-        metavar "-- FILES..."
+        metavar "-- PATHS..."
         ])
     where
         modeOption = option $ readerAsk >>= \opt -> case opt of
