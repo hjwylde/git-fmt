@@ -57,9 +57,7 @@ data Mode = Normal | DryRun
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- paths >>=
-        mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (getRecursiveContents path) (return [path])) >>=
-        return . nub . concat
+    filePaths <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (getRecursiveContents path) (return [path]))
 
     forM_ filePaths $ \filePath ->
         whenJust (languageOf $ takeExtension filePath) $ \language ->
