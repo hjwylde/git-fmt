@@ -22,11 +22,9 @@ import Git.Fmt.Language.Json.Pretty ()
 import Text.Parsec.String
 import Text.PrettyPrint.HughesPJClass
 
-
 -- | Supported languages.
 data Language = Json
     deriving (Eq, Ord, Show)
-
 
 -- | Array of supported languages.
 languages :: [Language]

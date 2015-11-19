@@ -17,7 +17,6 @@ module Git.Fmt.Language.Json.Pretty where
 import Text.JSON
 import Text.PrettyPrint.HughesPJClass
 
-
 instance Pretty JSValue where
     pPrint (JSArray values)     = cat [char '[', nest 1 (sep $ punctuate (char ',') (map pPrint values)), char ']']
     pPrint (JSObject obj)

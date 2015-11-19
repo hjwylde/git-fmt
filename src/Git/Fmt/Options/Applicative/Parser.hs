@@ -23,7 +23,6 @@ import Options.Applicative.Types (readerAsk)
 import Git.Fmt
 import Git.Fmt.Version as This
 
-
 -- | The default preferences.
 --   Limits the help output to 100 columns.
 gitFmtPrefs :: ParserPrefs

@@ -33,7 +33,6 @@ import Prelude hiding (filter, log)
 import System.IO
 import System.Log.FastLogger
 
-
 main :: IO ()
 main = customExecParser gitFmtPrefs gitFmtInfo >>= \options ->
     runLoggingT (filter options (handle options)) (if optChatty options == Verbose then verboseLog else log)
