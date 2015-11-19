@@ -10,6 +10,7 @@ Maintainer  : public@hjwylde.com
 Options and handler for the git-fmt command.
 -}
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Git.Fmt (
@@ -20,24 +21,26 @@ module Git.Fmt (
     handle,
 ) where
 
-import Control.Monad.Catch      (MonadMask, bracket)
+import Control.Monad.Catch      (MonadMask)
 import Control.Monad.Extra
 import Control.Monad.IO.Class
 import Control.Monad.Logger
+import Control.Monad.Reader
 
-import Data.Text        (pack)
-import Data.List.Extra  (linesBy, nub)
+import qualified    Data.Text           as T
+import              Data.List.Extra     (linesBy, lower, nub, replace)
+import              Data.Yaml.Include   (decodeFileEither)
 
-import Git.Fmt.Language
+import Git.Fmt.Config as Config
 import Git.Fmt.Process
 
 import Prelude hiding (read)
 
-import System.Directory
+import System.Directory.Extra   hiding (withCurrentDirectory)
+import System.Directory.Extra'
+import System.Exit
 import System.FilePath
-
-import Text.Parsec
-
+import System.IO.Temp
 
 -- | Options.
 data Options = Options {
@@ -56,66 +59,64 @@ data Chatty = Default | Quiet | Verbose
 data Mode = Normal | DryRun
     deriving (Eq, Show)
 
-
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
-handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (getRecursiveContents path) (return [path]))
+handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
+    filePaths <- fmap (nub . concat) $ paths >>= mapM
+        (\path -> ifM (liftIO $ doesDirectoryExist path)
+            (liftIO $ listFilesRecursive path)
+            (return [path])
+            )
 
-    forM_ filePaths $ \filePath ->
-        whenJust (languageOf $ takeExtension filePath) $ \language ->
-            ifM (liftIO $ doesFileExist filePath)
-                (fmt options filePath language)
-                ($(logWarn) $ pack (filePath ++ ": not found"))
+    unlessM (liftIO $ doesFileExist Config.fileName) $ $(logError) (T.pack $ Config.fileName ++ ": not found") >> liftIO (exitWith $ ExitFailure 128)
+    config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
+        Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 128)
+        Right config    -> return config
+
+    let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
+
+    flip runReaderT config $ withSystemTempDirectory "git-fmt" $ \tmpDir ->
+        forM_ supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
+            (fmt options filePath (tmpDir </> filePath))
+            ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
         paths
-            | null (argPaths options)   = linesBy (== '\0') <$> run "git" ["ls-files", "-z"]
+            | null (argPaths options)   = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
             | optNull options           = return $ concatMap (linesBy (== '\0')) (argPaths options)
             | otherwise                 = return $ argPaths options
 
-fmt :: (MonadIO m, MonadLogger m) => Options -> FilePath -> Language -> m ()
-fmt options filePath language = do
-    (ugly, mPretty) <- read filePath language
+fmt :: (MonadIO m, MonadLogger m, MonadReader Config m) => Options -> FilePath -> FilePath -> m ()
+fmt options filePath tmpFilePath = do
+    config <- ask
+    let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension filePath)
 
-    whenJust mPretty $ \pretty -> if ugly == pretty
-        then $(logDebug) $ pack (filePath ++ ": pretty")
-        else action filePath ugly pretty
+    runProgram_ program filePath tmpFilePath
+
+    (exitCode, _, stderr) <- runProcess "diff" [filePath, tmpFilePath]
+    case exitCode of
+        ExitSuccess     -> $(logDebug) $ T.pack (filePath ++ ": pretty")
+        ExitFailure 1   -> action filePath tmpFilePath
+        _               -> $(logWarn) $ T.pack stderr
     where
         action = case optMode options of
-            Normal -> normal
-            DryRun -> dryRun
+            Normal -> fmtNormal
+            DryRun -> fmtDryRun
 
-normal :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
-normal filePath _ pretty = do
-    $(logInfo) $ pack (filePath ++ ": prettified")
+fmtNormal :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
+fmtNormal filePath tmpFilePath = do
+    $(logInfo) $ T.pack (filePath ++ ": prettified")
 
-    liftIO $ writeFile filePath pretty
+    liftIO $ renameFile tmpFilePath filePath
 
-dryRun :: (MonadIO m, MonadLogger m) => FilePath -> String -> String -> m ()
-dryRun filePath _ _ = $(logInfo) $ pack (filePath ++ ": ugly")
+fmtDryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
+fmtDryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
 
-read :: (MonadIO m, MonadLogger m) => FilePath -> Language -> m (String, Maybe String)
-read filePath language = do
-    input <- liftIO $ readFile filePath
+runProgram_ :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m ()
+runProgram_ program inputFilePath tmpFilePath = do
+    liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
-    case runParser (parser language) () filePath input of
-        Left error  -> do
-            $(logWarn)  $ pack (filePath ++ ": parse error")
-            $(logDebug) $ pack (show error)
-
-            return (input, Nothing)
-        Right doc   -> return (input, Just $ renderWithTabs doc)
-
-withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
-withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
-
-getRecursiveContents :: MonadIO m => FilePath -> m [FilePath]
-getRecursiveContents dir = do
-    paths <- filter (`notElem` [".", ".."]) <$> liftIO (getDirectoryContents dir)
-
-    concat <$> forM paths (\path ->
-        ifM (liftIO $ doesDirectoryExist (dir </> path))
-            (getRecursiveContents $ dir </> path)
-            (return [dir </> path])
-        )
+    void . runCommand_ $ foldr (uncurry replace) (T.unpack $ command program) [
+        ("{{inputFilePath}}", inputFilePath),
+        ("{{tmpFilePath}}", tmpFilePath)
+        ]
 

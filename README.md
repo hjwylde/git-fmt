@@ -4,11 +4,14 @@
 [![Build Status](https://travis-ci.org/hjwylde/git-fmt.svg?branch=master)](https://travis-ci.org/hjwylde/git-fmt)
 [![Release](https://img.shields.io/github/release/hjwylde/git-fmt.svg)](https://github.com/hjwylde/git-fmt/releases/latest)
 
-`git-fmt` adds a custom command to Git that automatically formats code.
+(Side note: the formatting component of this project will eventually be split out and named omnifmt.)
+
+`git-fmt` adds a custom command to Git that automatically formats code by using external
+    pretty-printers.
 The idea was taken from [gofmt](https://golang.org/cmd/gofmt/), just with a bit of expansion to more
     languages.
 
-`fmt`'d code is:
+Formatted code is:
 
 * Easier to write: never worry about minor formatting concerns while hacking away.
 * Easier to read: when all code looks the same you need not mentally convert others' formatting
@@ -17,7 +20,7 @@ The idea was taken from [gofmt](https://golang.org/cmd/gofmt/), just with a bit 
   formatting; diffs show only the real changes.
 * Uncontroversial: never have a debate about spacing or brace position ever again.
 
-(Bullet points taken from https://blog.golang.org/go-fmt-your-code)
+(Bullet points taken from https://blog.golang.org/go-fmt-your-code.)
 
 ### Installing
 
@@ -46,39 +49,36 @@ export PATH=$PATH:~/.cabal/bin
 1. Download the appropriate binary for your system from the [latest release](https://github.com/hjwylde/git-fmt/releases/latest).
 2. Place the binary somewhere it will be included in your `$PATH`.
 
-### Formatting
+### Usage
 
-The formatter is designed to produce pretty, readable code.
-It adheres to a few properties and styling rules to accomplish this.
+`git-fmt` itself just provides a way to select files in the git repository and pipe them through a
+    pretty-printer.
+It also provides a dry-run mode that will show you which files need prettifying.
 
-**Properties:**
+#### Configuration
 
-The formatter is:
-* Portable: it behaves the same across operating systems.
-* Consistent: it produces code that behaves exactly the same as before.
-* Correct: it produces valid code.
-* Idempotent: calling it multiple times results in the same output.
+Configuration is done through an `.omnifmt.yaml` file in the repository's top-level directory.
 
-The formatter is not necessarily _complete_ as many parsers implement strange parsing rules that
-    can't be replicated easily.
-As such, there may be inputs that it is unable to parse;
-    in these scenarios it simply outputs a warning and moves on to the next input.
+To show how, here's an example `.omnifmt.yaml`:
+```yaml
+haskell:
+    extensions: ["hs", "lhs"]
+    command:    "stylish-haskell {{inputFileName}} > {{tmpFileName}}"
 
-**Styling:**
+javascript:
+    extensions: ["js"]
+    command:    "js-beautify {{inputFileName}} > {{tmpFileName}}"
 
-On top of providing a standard styling to all language elements,
-    the formatter performs the following changes:
-* Sorts imports and declarations where possible.
-* Limits the line length to 100 characters.
+json:
+    extensions: ["json"]
+    command:    "cat {{inputFileName}} | json_pp > {{tmpFileName}}"
+```
 
-Further, it ensures that:
-* Comments are maintained.
-* Line breaks between statements are maintained (up to a maximum of 1).
+That's all it takes!
+Each command must declare how to read the input file and how to write to the temporary file.
+The temporary file is used to compare whether the original input was pretty or ugly before writing
+    to the original.
 
-### Languages
-
-The following languages are supported:
-* JSON
-
-For examples on how a specific language is formatted, see the test examples.
+Extensions is pretty self explanatory, but if you use the same extension more than once then
+    precedence goes to the first defined pretty-printer.
 
