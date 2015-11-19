@@ -30,6 +30,6 @@ panic error = $(logError) (pack error) >> exitFast 128
 
 -- | Exits fast with the given code (may be 0 for success!).
 exitFast :: (MonadIO m) => Int -> m a
-exitFast 0 = liftIO $ exitWith ExitSuccess
+exitFast 0 = liftIO exitSuccess
 exitFast code = liftIO $ exitWith (ExitFailure code)
 
