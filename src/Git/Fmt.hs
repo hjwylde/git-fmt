@@ -63,8 +63,12 @@ data Mode = Normal | DryRun
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
-handle options = runProcess "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths   <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (liftIO $ listFilesRecursive path) (return [path]))
+handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
+    filePaths   <- fmap (nub . concat) $ paths >>= mapM
+        (\path -> ifM (liftIO $ doesDirectoryExist path)
+            (liftIO $ listFilesRecursive path)
+            (return [path])
+            )
     config      <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
         Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 1)
         Right config    -> return config
@@ -77,7 +81,7 @@ handle options = runProcess "git" ["rev-parse", "--show-toplevel"] >>= \dir -> w
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
         paths
-            | null (argPaths options)   = linesBy (== '\0') <$> runProcess "git" ["ls-files", "-z"]
+            | null (argPaths options)   = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
             | optNull options           = return $ concatMap (linesBy (== '\0')) (argPaths options)
             | otherwise                 = return $ argPaths options
 
@@ -110,7 +114,7 @@ runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m
 runProgram program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
-    runCommand_ $ foldr (uncurry replace) (T.unpack $ command program) [
+    void . runCommand_ $ foldr (uncurry replace) (T.unpack $ command program) [
         ("{{inputFilePath}}", inputFilePath),
         ("{{tmpFilePath}}", tmpFilePath)
         ]

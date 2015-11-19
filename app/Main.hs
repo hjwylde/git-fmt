@@ -62,5 +62,5 @@ verboseLog _ _ level msg = do
         h = if level == LevelError then stderr else stdout
 
 formatLevel :: LogLevel -> Text
-formatLevel = T.take 6 . T.drop 5 . (`T.append` "  ") . T.pack . lower . show
+formatLevel = T.take 6 . (`T.append` "  ") . T.drop 5 . T.pack . lower . show
 
