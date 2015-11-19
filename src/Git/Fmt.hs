@@ -41,6 +41,7 @@ import System.Directory.Extra'
 import System.Exit
 import System.FilePath
 import System.IO.Temp
+import System.IO.Extra'
 
 -- | Options.
 data Options = Options {
@@ -61,16 +62,17 @@ data Mode = Normal | DryRun
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
-handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
+handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init dir) $ do
     filePaths <- fmap (nub . concat) $ paths >>= mapM
         (\path -> ifM (liftIO $ doesDirectoryExist path)
             (liftIO $ listFilesRecursive path)
             (return [path])
             )
 
-    unlessM (liftIO $ doesFileExist Config.fileName) $ $(logError) (T.pack $ Config.fileName ++ ": not found") >> liftIO (exitWith $ ExitFailure 128)
+    unlessM (liftIO $ doesFileExist Config.fileName) $ panic (Config.fileName ++ ": not found")
+
     config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
-        Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 128)
+        Left error      -> panic (show error)
         Right config    -> return config
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
@@ -110,6 +112,14 @@ fmtNormal filePath tmpFilePath = do
 
 fmtDryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
 fmtDryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
+
+findTopLevelGitDirectory :: (MonadIO m, MonadLogger m) => m String
+findTopLevelGitDirectory = do
+    (exitCode, stdout, _) <- runProcess "git" ["rev-parse", "--show-toplevel"]
+
+    if exitCode == ExitSuccess
+        then return stdout
+        else panic ".git/: not found"
 
 runProgram_ :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m ()
 runProgram_ program inputFilePath tmpFilePath = do

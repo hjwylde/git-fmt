@@ -11,8 +11,8 @@ Extra extra directory utilities.
 -}
 
 module System.Directory.Extra' (
-    -- * Options
-    withCurrentDirectory
+    -- * Changing directories
+    withCurrentDirectory,
 ) where
 
 import Control.Monad.Catch (MonadMask, bracket)
