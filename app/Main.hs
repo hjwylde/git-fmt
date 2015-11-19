@@ -18,10 +18,12 @@ module Main (
 import Control.Monad
 import Control.Monad.Logger
 
-import              Data.ByteString.Char8   (ByteString)
-import qualified    Data.ByteString.Char8   as BS
-import              Data.List.Extra         (dropEnd, lower)
-import              Data.Time               (getZonedTime, formatTime, defaultTimeLocale)
+import              Data.List.Extra     (dropEnd, lower)
+import              Data.Text           (Text)
+import qualified    Data.Text           as T
+import qualified    Data.Text.Encoding  as T
+import qualified    Data.Text.IO        as T
+import              Data.Time           (getZonedTime, formatTime, defaultTimeLocale)
 
 import Git.Fmt
 import Git.Fmt.Options.Applicative.Parser
@@ -46,7 +48,7 @@ filter options = filterLogger (\_ level -> level >= minLevel)
             Verbose -> LevelDebug
 
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
-log _ _ level msg = BS.hPutStrLn h (fromLogStr msg)
+log _ _ level msg = T.hPutStrLn h (T.decodeUtf8 $ fromLogStr msg)
     where
         h = if level == LevelError then stderr else stdout
 
@@ -54,11 +56,11 @@ verboseLog :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 verboseLog _ _ level msg = do
     timestamp <- formatTime defaultTimeLocale "%F %T.%q" <$> getZonedTime
 
-    forM_ (BS.lines $ fromLogStr msg) $ \line ->
-        BS.hPutStrLn h (BS.unwords [BS.pack $ "[" ++ dropEnd 6 timestamp ++ "]", formatLevel level, line])
+    forM_ (T.lines . T.decodeUtf8 $ fromLogStr msg) $ \line ->
+        T.hPutStrLn h (T.unwords [T.pack $ "[" ++ dropEnd 6 timestamp ++ "]", formatLevel level, line])
     where
         h = if level == LevelError then stderr else stdout
 
-formatLevel :: LogLevel -> ByteString
-formatLevel = BS.take 6 . BS.drop 5 . (`BS.append` "  ") . BS.pack . lower . show
+formatLevel :: LogLevel -> Text
+formatLevel = T.take 6 . T.drop 5 . (`T.append` "  ") . T.pack . lower . show
 

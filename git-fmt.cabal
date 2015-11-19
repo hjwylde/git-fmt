@@ -30,12 +30,12 @@ executable git-fmt
         OverloadedStrings
     build-depends:
         base == 4.8.*,
-        bytestring == 0.10.*,
         extra == 1.4.*,
         fast-logger == 2.4.*,
         git-fmt,
         monad-logger == 0.3.*,
         optparse-applicative == 0.11.*,
+        text == 1.2.*,
         time == 1.5.*
 
 library
@@ -43,10 +43,10 @@ library
     ghc-options:    -Wall -Werror -fno-warn-name-shadowing
     exposed-modules:
         Git.Fmt,
-        Git.Fmt.Config,
         Git.Fmt.Language,
         Git.Fmt.Options.Applicative.Parser
     other-modules:
+        Git.Fmt.Config,
         Git.Fmt.Language.Json.Parser,
         Git.Fmt.Language.Json.Pretty,
         Git.Fmt.Process,
