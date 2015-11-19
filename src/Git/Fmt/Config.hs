@@ -25,13 +25,11 @@ module Git.Fmt.Config (
     fileName,
 ) where
 
-import Control.Monad
-
-import Data.Maybe           (fromJust, isJust)
-import Data.List            (find)
+import Data.Aeson.Types
 import Data.HashMap.Lazy    (toList)
+import Data.List            (find)
+import Data.Maybe           (fromJust, isJust)
 import Data.Text            (Text)
-import Data.Yaml
 
 -- | A list of programs.
 data Config = Config {
@@ -43,7 +41,7 @@ instance FromJSON Config where
     parseJSON (Object obj)  = Config <$> mapM (\(key, value) ->
             parseJSON value >>= \program -> return program { name = key }
             ) (toList obj)
-    parseJSON _             = mzero
+    parseJSON value         = typeMismatch "Config" value
 
 -- | The empty config (no programs).
 emptyConfig :: Config
@@ -60,7 +58,7 @@ data Program = Program {
 
 instance FromJSON Program where
     parseJSON (Object obj)  = Program "" <$> obj .: "extensions" <*> obj .: "command"
-    parseJSON _             = mzero
+    parseJSON value         = typeMismatch "Program" value
 
 -- | The empty program (the command fails).
 emptyProgram :: Program

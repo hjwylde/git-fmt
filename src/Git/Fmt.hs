@@ -29,6 +29,7 @@ import Control.Monad.Reader
 
 import qualified    Data.Text           as T
 import              Data.List.Extra     (linesBy, lower, nub, replace)
+import              Data.Yaml           (prettyPrintParseException)
 import              Data.Yaml.Include   (decodeFileEither)
 
 import Git.Fmt.Config as Config
@@ -72,7 +73,7 @@ handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init
     unlessM (liftIO $ doesFileExist Config.fileName) $ panic (Config.fileName ++ ": not found")
 
     config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
-        Left error      -> panic (show error)
+        Left error      -> panic $ Config.fileName ++ ": error\n" ++ prettyPrintParseException error
         Right config    -> return config
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths

@@ -48,7 +48,7 @@ filter options = filterLogger (\_ level -> level >= minLevel)
             Verbose -> LevelDebug
 
 log :: Loc -> LogSource -> LogLevel -> LogStr -> IO ()
-log _ _ level msg = T.hPutStrLn h (T.decodeUtf8 $ fromLogStr msg)
+log _ _ level msg = forM_ (T.lines . T.decodeUtf8 $ fromLogStr msg) (T.hPutStrLn h)
     where
         h = if level == LevelError then stderr else stdout
 

@@ -59,6 +59,7 @@ library
         OverloadedStrings
         TemplateHaskell
     build-depends:
+        aeson == 0.8.*,
         base == 4.8.*,
         directory == 1.2.*,
         exceptions == 0.8.*,
