@@ -41,6 +41,7 @@ library
     ghc-options:    -Wall -Werror -fno-warn-name-shadowing
     exposed-modules:
         Git.Fmt,
+        Git.Fmt.Config,
         Git.Fmt.Language,
         Git.Fmt.Options.Applicative.Parser
     other-modules:
@@ -67,7 +68,9 @@ library
         pretty == 1.1.*,
         process == 1.2.*,
         text == 1.2.*,
-        transformers == 0.4.*
+        transformers == 0.4.*,
+        unordered-containers == 0.2.*,
+        yaml == 0.8.*
 
 test-suite git-fmt-test-json
     type:           exitcode-stdio-1.0
