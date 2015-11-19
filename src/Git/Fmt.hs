@@ -68,7 +68,7 @@ handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> 
             (return [path])
             )
 
-    unlessM (liftIO $ doesFileExist Config.fileName) $ $(logError) (T.pack ".omnifmt.yaml: not found") >> liftIO (exitWith $ ExitFailure 128)
+    unlessM (liftIO $ doesFileExist Config.fileName) $ $(logError) (T.pack $ Config.fileName ++ ": not found") >> liftIO (exitWith $ ExitFailure 128)
     config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
         Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 128)
         Right config    -> return config
@@ -96,7 +96,7 @@ fmt options filePath tmpFilePath = do
     case exitCode of
         ExitSuccess     -> $(logDebug) $ T.pack (filePath ++ ": pretty")
         ExitFailure 1   -> action filePath tmpFilePath
-        _               -> $(logError) $ T.pack stderr
+        _               -> $(logWarn) $ T.pack stderr
     where
         action = case optMode options of
             Normal -> fmtNormal

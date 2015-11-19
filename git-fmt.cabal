@@ -6,7 +6,8 @@ maintainer:     public@hjwylde.com
 homepage:       https://github.com/hjwylde/git-fmt
 
 synopsis:       Custom git command for formatting code.
-description:    git-fmt adds a custom command to Git that automatically formats code.
+description:    git-fmt adds a custom command to Git that automatically formats code by using
+                external pretty-printers.
                 The idea was taken from gofmt, just with a bit of expansion to more languages.
 
 license:        BSD3
