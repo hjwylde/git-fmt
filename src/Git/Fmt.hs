@@ -27,9 +27,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Logger
 import Control.Monad.Reader
 
-import              Data.Text           (Text)
 import qualified    Data.Text           as T
-import qualified    Data.Text.IO        as T
 import              Data.List.Extra     (linesBy, lower, nub, replace)
 import              Data.Yaml.Include   (decodeFileEither)
 
@@ -64,20 +62,22 @@ data Mode = Normal | DryRun
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths   <- fmap (nub . concat) $ paths >>= mapM
+    filePaths <- fmap (nub . concat) $ paths >>= mapM
         (\path -> ifM (liftIO $ doesDirectoryExist path)
             (liftIO $ listFilesRecursive path)
             (return [path])
             )
-    config      <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
-        Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 1)
+
+    unlessM (liftIO $ doesFileExist Config.fileName) $ $(logError) (T.pack ".omnifmt.yaml: not found") >> liftIO (exitWith $ ExitFailure 128)
+    config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
+        Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 128)
         Right config    -> return config
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
 
     flip runReaderT config $ withSystemTempDirectory "git-fmt" $ \tmpDir ->
         forM_ supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
-            (fmt options tmpDir filePath)
+            (fmt options filePath (tmpDir </> filePath))
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
         paths
@@ -86,38 +86,37 @@ handle options = runProcess_ "git" ["rev-parse", "--show-toplevel"] >>= \dir -> 
             | otherwise                 = return $ argPaths options
 
 fmt :: (MonadIO m, MonadLogger m, MonadReader Config m) => Options -> FilePath -> FilePath -> m ()
-fmt options tmpDir filePath = do
+fmt options filePath tmpFilePath = do
     config <- ask
     let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension filePath)
 
-    pretty  <- runProgram program filePath (tmpDir </> filePath)
-    ugly    <- liftIO $ T.readFile filePath
+    runProgram_ program filePath tmpFilePath
 
-    if ugly == pretty
-        then $(logDebug) $ T.pack (filePath ++ ": pretty")
-        else action filePath pretty
+    (exitCode, _, stderr) <- runProcess "diff" [filePath, tmpFilePath]
+    case exitCode of
+        ExitSuccess     -> $(logDebug) $ T.pack (filePath ++ ": pretty")
+        ExitFailure 1   -> action filePath tmpFilePath
+        _               -> $(logError) $ T.pack stderr
     where
         action = case optMode options of
             Normal -> fmtNormal
             DryRun -> fmtDryRun
 
-fmtNormal :: (MonadIO m, MonadLogger m) => FilePath -> Text -> m ()
-fmtNormal filePath pretty = do
+fmtNormal :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
+fmtNormal filePath tmpFilePath = do
     $(logInfo) $ T.pack (filePath ++ ": prettified")
 
-    liftIO $ T.writeFile filePath pretty
+    liftIO $ renameFile tmpFilePath filePath
 
-fmtDryRun :: (MonadIO m, MonadLogger m) => FilePath -> Text -> m ()
+fmtDryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
 fmtDryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
 
-runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m Text
-runProgram program inputFilePath tmpFilePath = do
+runProgram_ :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m ()
+runProgram_ program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
     void . runCommand_ $ foldr (uncurry replace) (T.unpack $ command program) [
         ("{{inputFilePath}}", inputFilePath),
         ("{{tmpFilePath}}", tmpFilePath)
         ]
-
-    liftIO $ T.readFile tmpFilePath
 
