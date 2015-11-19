@@ -95,14 +95,14 @@ fmt options filePath tmpFilePath = do
 
     (exitCode, _, stderr) <- runProgram program filePath tmpFilePath
     case exitCode of
-        ExitSuccess         -> diff filePath tmpFilePath
+        ExitSuccess         -> diff options filePath tmpFilePath
         ExitFailure code    -> if code >= 126
             then panicWith stderr code
             else $(logWarn) (T.pack $ filePath ++ ": error") >>
-                 $(logDebug) ($.pack stderr)
+                 $(logDebug) (T.pack stderr)
 
-diff :: (MonadIO m, MonadLogger m) => m ()
-diff filePath tmpFilePath = do
+diff :: (MonadIO m, MonadLogger m) => Options -> FilePath -> FilePath -> m ()
+diff options filePath tmpFilePath = do
     (exitCode, _, stderr) <- runProcess "diff" [filePath, tmpFilePath]
     case exitCode of
         ExitSuccess     -> $(logDebug) $ T.pack (filePath ++ ": pretty")
