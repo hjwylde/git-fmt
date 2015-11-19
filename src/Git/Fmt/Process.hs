@@ -14,7 +14,7 @@ System process utilities.
 
 module Git.Fmt.Process (
     -- * Run
-    runProcess, runProcess_, runCommand_, runCreateProcess, runCreateProcess_,
+    runProcess, runProcess_, runCommand, runCommand_, runCreateProcess, runCreateProcess_,
 ) where
 
 import Control.Monad.IO.Class
@@ -36,6 +36,11 @@ runProcess cmd args = runCreateProcess (System.proc cmd args) ""
 --   Depending on the exit code, either logs the stderr and exits fast (128) or returns the stdout.
 runProcess_ :: (MonadIO m, MonadLogger m) => FilePath -> [String] -> m String
 runProcess_ cmd args = runCreateProcess_ (System.proc cmd args) ""
+
+-- | Runs the given command.
+--   Returns the exit code, stdout and stderr.
+runCommand :: (MonadIO m, MonadLogger m) => String -> m (ExitCode, String, String)
+runCommand cmd = runCreateProcess (System.shell cmd) ""
 
 -- | Runs the given command.
 --   Depending on the exit code, either logs the stderr and exits fast (128) or returns the stdout.
