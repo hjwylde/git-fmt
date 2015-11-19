@@ -21,7 +21,7 @@ module Git.Fmt (
     handle,
 ) where
 
-import Control.Monad.Catch      (MonadMask, bracket)
+import Control.Monad.Catch      (MonadMask)
 import Control.Monad.Extra
 import Control.Monad.IO.Class
 import Control.Monad.Logger
@@ -38,7 +38,8 @@ import Git.Fmt.Process
 
 import Prelude hiding (read)
 
-import System.Directory
+import System.Directory.Extra   hiding (withCurrentDirectory)
+import System.Directory.Extra'
 import System.Exit
 import System.FilePath
 import System.IO.Temp
@@ -63,7 +64,7 @@ data Mode = Normal | DryRun
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
 handle options = runProcess "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths   <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (getRecursiveContents path) (return [path]))
+    filePaths   <- fmap (nub . concat) $ paths >>= mapM (\path -> ifM (liftIO $ doesDirectoryExist path) (liftIO $ listFilesRecursive path) (return [path]))
     config      <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
         Left error      -> $(logError) (T.pack $ show error) >> liftIO (exitWith $ ExitFailure 1)
         Right config    -> return config
@@ -115,17 +116,4 @@ runProgram program inputFilePath tmpFilePath = do
         ]
 
     liftIO $ T.readFile tmpFilePath
-
-withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
-withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
-
-getRecursiveContents :: MonadIO m => FilePath -> m [FilePath]
-getRecursiveContents dir = do
-    paths <- filter (`notElem` [".", ".."]) <$> liftIO (getDirectoryContents dir)
-
-    concat <$> forM paths (\path ->
-        ifM (liftIO $ doesDirectoryExist (dir </> path))
-            (getRecursiveContents $ dir </> path)
-            (return [dir </> path])
-        )
 
