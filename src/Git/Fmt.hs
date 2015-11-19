@@ -93,8 +93,16 @@ fmt options filePath tmpFilePath = do
     config <- ask
     let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension filePath)
 
-    runProgram_ program filePath tmpFilePath
+    (exitCode, _, stderr) <- runProgram program filePath tmpFilePath
+    case exitCode of
+        ExitSuccess         -> diff filePath tmpFilePath
+        ExitFailure code    -> if code >= 126
+            then panicWith stderr code
+            else $(logWarn) (T.pack $ filePath ++ ": error") >>
+                 $(logDebug) ($.pack stderr)
 
+diff :: (MonadIO m, MonadLogger m) => m ()
+diff filePath tmpFilePath = do
     (exitCode, _, stderr) <- runProcess "diff" [filePath, tmpFilePath]
     case exitCode of
         ExitSuccess     -> $(logDebug) $ T.pack (filePath ++ ": pretty")
@@ -102,17 +110,17 @@ fmt options filePath tmpFilePath = do
         _               -> $(logWarn) $ T.pack stderr
     where
         action = case optMode options of
-            Normal -> fmtNormal
-            DryRun -> fmtDryRun
+            Normal -> normal
+            DryRun -> dryRun
 
-fmtNormal :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
-fmtNormal filePath tmpFilePath = do
+normal :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
+normal filePath tmpFilePath = do
     $(logInfo) $ T.pack (filePath ++ ": prettified")
 
     liftIO $ renameFile tmpFilePath filePath
 
-fmtDryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
-fmtDryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
+dryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
+dryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
 
 findTopLevelGitDirectory :: (MonadIO m, MonadLogger m) => m String
 findTopLevelGitDirectory = do
@@ -122,11 +130,11 @@ findTopLevelGitDirectory = do
         then return stdout
         else panic ".git/: not found"
 
-runProgram_ :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m ()
-runProgram_ program inputFilePath tmpFilePath = do
+runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m (ExitCode, String, String)
+runProgram program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
-    void . runCommand_ $ foldr (uncurry replace) (T.unpack $ command program) [
+    runCommand $ foldr (uncurry replace) (T.unpack $ command program) [
         ("{{inputFilePath}}", inputFilePath),
         ("{{tmpFilePath}}", tmpFilePath)
         ]

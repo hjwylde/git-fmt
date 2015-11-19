@@ -14,7 +14,7 @@ Extra extra IO utilities.
 
 module System.IO.Extra' (
     -- * Exiting
-    panic, exitFast,
+    panicWith, panic, exitFast,
 ) where
 
 import Control.Monad.IO.Class
@@ -24,9 +24,13 @@ import Data.Text (pack)
 
 import System.Exit
 
+-- | Panics, logging the error to stderr and exiting fast with the code.
+panicWith :: (MonadIO m, MonadLogger m) => String -> Int -> m a
+panicWith error code = $(logError) (pack error) >> exitFast code
+
 -- | Panics, logging the error to stderr and exiting fast with 128.
 panic :: (MonadIO m, MonadLogger m) => String -> m a
-panic error = $(logError) (pack error) >> exitFast 128
+panic error = panicWith error 128
 
 -- | Exits fast with the given code (may be 0 for success!).
 exitFast :: (MonadIO m) => Int -> m a
