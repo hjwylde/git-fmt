@@ -23,6 +23,7 @@ import Control.Monad.Logger
 import Data.Text hiding (unwords)
 
 import              System.Exit
+import              System.IO.Extra'
 import              System.Process (CreateProcess, CmdSpec(..))
 import qualified    System.Process as System
 
@@ -60,5 +61,5 @@ runCreateProcess_ process stdin = do
 
     if exitCode == ExitSuccess
         then return stdout
-        else $(logError) (pack stderr) >> liftIO (exitWith $ ExitFailure 128)
+        else panic stderr
 

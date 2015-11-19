@@ -51,6 +51,7 @@ library
         Git.Fmt.Version,
         Paths_git_fmt,
         System.Directory.Extra'
+        System.IO.Extra'
 
     default-language: Haskell2010
     other-extensions:
