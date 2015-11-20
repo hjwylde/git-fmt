@@ -33,21 +33,16 @@ Alternatively you may download a pre-compiled binary of the
 **Using stack:**
 
 ```bash
-stack install qux
+stack install git-fmt
 export PATH=$PATH:~/.local/bin
 ```
 
 **Using Cabal:**
 
 ```bash
-cabal-install qux
+cabal-install git-fmt
 export PATH=$PATH:~/.cabal/bin
 ```
-
-**Using a release:**
-
-1. Download the appropriate binary for your system from the [latest release](https://github.com/hjwylde/git-fmt/releases/latest).
-2. Place the binary somewhere it will be included in your `$PATH`.
 
 ### Usage
 
@@ -63,15 +58,15 @@ To show how, here's an example `.omnifmt.yaml`:
 ```yaml
 haskell:
     extensions: ["hs", "lhs"]
-    command:    "stylish-haskell {{inputFileName}} > {{tmpFileName}}"
+    command:    "stylish-haskell {{input}} > {{output}}"
 
 javascript:
     extensions: ["js"]
-    command:    "js-beautify {{inputFileName}} > {{tmpFileName}}"
+    command:    "js-beautify {{input}} > {{output}}"
 
 json:
     extensions: ["json"]
-    command:    "cat {{inputFileName}} | json_pp > {{tmpFileName}}"
+    command:    "json_pp < {{input}} > {{output}}"
 ```
 
 That's all it takes!

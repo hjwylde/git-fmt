@@ -136,7 +136,7 @@ runProgram program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
     runCommand $ foldr (uncurry replace) (T.unpack $ command program) [
-        ("{{inputFilePath}}", inputFilePath),
-        ("{{tmpFilePath}}", tmpFilePath)
+        ("{{input}}", inputFilePath),
+        ("{{output}}", tmpFilePath)
         ]
 
