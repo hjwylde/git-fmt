@@ -18,6 +18,8 @@
 * Added a warning for when files aren't found. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
 * Updated internal use of `git ls-files` to use the null terminator option. ([#27](https://github.com/hjwylde/git-fmt/issues/27))
 * Fixed debug log messages to have timestamp and log level on all lines. ([#33](https://github.com/hjwylde/git-fmt/issues/33))
+* Tidied up error messages from git. ([#40](https://github.com/hjwylde/git-fmt/issues/40))
+* Tidied up error messages from parsing the config. ([#43](https://github.com/hjwylde/git-fmt/issues/43))
 
 #### v0.1.0.2
 
