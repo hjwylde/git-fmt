@@ -62,7 +62,7 @@ haskell:
 
 javascript:
     extensions: ["js"]
-    command:    "js-beautify {{input}} > {{output}}"
+    command:    "js-beautify -"
 
 json:
     extensions: ["json"]
@@ -82,4 +82,13 @@ The output file is used to compare whether the original input was pretty or ugly
 
 Extensions is pretty self explanatory, but if you use the same extension more than once then
     precedence goes to the first defined pretty-printer.
+
+#### Examples
+
+See the [examples/](https://github.com/hjwylde/git-fmt/tree/master/examples/) directory for some
+    common pretty-printers and their corresponding omnifmt config.
+Just don't forget to actually call the config file `.omnifmt.yaml`!
+
+**NB:** Be careful when using these examples, I have not tested the pretty-printers fully to check
+    that they will not destroy your code by accident.
 

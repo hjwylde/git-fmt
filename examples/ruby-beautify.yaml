@@ -1,0 +1,5 @@
+# https://github.com/erniebrodeur/ruby-beautify
+ruby:
+    extensions: ["rb"]
+    command:    "ruby-beautify"
+
