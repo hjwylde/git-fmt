@@ -1,5 +1,5 @@
 name:           git-fmt
-version:        0.1.0.2
+version:        0.2.0.0
 
 author:         Henry J. Wylde
 maintainer:     public@hjwylde.com
@@ -24,7 +24,6 @@ source-repository head
 executable git-fmt
     main-is:        Main.hs
     hs-source-dirs: app/
-    ghc-options:    -Wall -Werror -fno-warn-name-shadowing
 
     default-language: Haskell2010
     other-extensions:
@@ -42,7 +41,6 @@ executable git-fmt
 
 library
     hs-source-dirs: src/
-    ghc-options:    -Wall -Werror -fno-warn-name-shadowing
     exposed-modules:
         Git.Fmt,
         Git.Fmt.Options.Applicative.Parser

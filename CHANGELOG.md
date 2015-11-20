@@ -2,6 +2,8 @@
 
 #### Upcoming in master
 
+#### v0.2.0.0
+
 *Major*
 * Removed `--list-ugly` and `--dry-run` options. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
 * Restricted use of `--quiet` and `--verbose` at the same time. ([#35](https://github.com/hjwylde/git-fmt/issues/35))
