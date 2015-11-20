@@ -35,6 +35,7 @@ executable git-fmt
         fast-logger == 2.4.*,
         git-fmt,
         monad-logger == 0.3.*,
+        monad-parallel == 0.7.*,
         optparse-applicative == 0.11.*,
         text == 1.2.*,
         time == 1.5.*
@@ -66,6 +67,7 @@ library
         extra == 1.4.*,
         filepath == 1.4.*,
         monad-logger == 0.3.*,
+        monad-parallel == 0.7.*,
         mtl == 2.2.*,
         optparse-applicative == 0.11.*,
         process == 1.2.*,
