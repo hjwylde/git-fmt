@@ -12,6 +12,7 @@
 * Added `--mode` option (either `normal` or `dry-run`). ([#29](https://github.com/hjwylde/git-fmt/issues/29))
 * Added `--null` option (use the null terminator as the delimiter for inputs). ([#27](https://github.com/hjwylde/git-fmt/issues/27))
 * Added support for directories as arguments (directories include all files within recursively). ([#30](https://github.com/hjwylde/git-fmt/issues/30))
+* Added parallelisation. ([#48](https://github.com/hjwylde/git-fmt/issues/48))
 
 *Revisions*
 * Added a warning for when files aren't found. ([#29](https://github.com/hjwylde/git-fmt/issues/29))
