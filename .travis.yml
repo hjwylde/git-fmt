@@ -28,9 +28,10 @@ before_install:
 
 install:
 - travis_wait stack $ARGS --no-terminal --skip-ghc-check setup
-- stack --resolver lts install hlint
+- stack --resolver lts install hlint git-fmt
 
 script:
 - stack $ARGS --no-terminal --skip-ghc-check test
 - hlint .
+- git fmt -m dry-run .
 
