@@ -2,6 +2,9 @@
 
 #### Upcoming in master
 
+*Minor*
+* Added default use of stdin and stdout when variables not specified in a program command. ([#49](https://github.com/hjwylde/git-fmt/issues/49))
+
 #### v0.2.0.0
 
 *Major*

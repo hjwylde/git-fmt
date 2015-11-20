@@ -29,7 +29,7 @@ import              Control.Monad.Parallel  (MonadParallel)
 import qualified    Control.Monad.Parallel  as Parallel
 import              Control.Monad.Reader
 
-import              Data.List.Extra     (chunksOf, linesBy, lower, nub, replace)
+import              Data.List.Extra     (chunksOf, linesBy, lower, nub)
 import qualified    Data.Text           as T
 import              Data.Yaml           (prettyPrintParseException)
 import              Data.Yaml.Include   (decodeFileEither)
@@ -72,10 +72,10 @@ handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init
             (return [path])
             )
 
-    unlessM (liftIO $ doesFileExist Config.fileName) $ panic (Config.fileName ++ ": not found")
+    unlessM (liftIO $ doesFileExist Config.defaultFileName) $ panic (Config.defaultFileName ++ ": not found")
 
-    config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
-        Left error      -> panic $ Config.fileName ++ ": error\n" ++ prettyPrintParseException error
+    config <- liftIO (decodeFileEither Config.defaultFileName) >>= \ethr -> case ethr of
+        Left error      -> panic $ Config.defaultFileName ++ ": error\n" ++ prettyPrintParseException error
         Right config    -> return config
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
@@ -135,8 +135,15 @@ runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m
 runProgram program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
-    runCommand $ foldr (uncurry replace) (T.unpack $ command program) [
-        ("{{input}}", inputFilePath),
-        ("{{output}}", tmpFilePath)
+    runCommand . T.unpack $ substitute (T.concat [command program, inputSuffix, outputSuffix]) [
+        (inputVariableName, T.pack $ '"':inputFilePath ++ "\""),
+        (outputVariableName, T.pack $ '"':tmpFilePath ++ "\"")
         ]
+    where
+        inputSuffix
+            | usesInputVariable (command program)   = T.empty
+            | otherwise                             = T.pack " < " `T.append` inputVariableName
+        outputSuffix
+            | usesOutputVariable (command program)  = T.empty
+            | otherwise                             = T.pack " > " `T.append` outputVariableName
 
