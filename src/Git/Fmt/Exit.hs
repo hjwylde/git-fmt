@@ -1,18 +1,18 @@
 
 {-|
-Module      : System.IO.Extra'
-Description : Extra extra IO utilities.
+Module      : Git.Fmt.Exit
+Description : Extra exit utilities.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Extra extra IO utilities.
+Extra exit utilities.
 -}
 
 {-# LANGUAGE TemplateHaskell #-}
 
-module System.IO.Extra' (
+module Git.Fmt.Exit (
     -- * Exiting
     panicWith, panic, exitFast,
 ) where

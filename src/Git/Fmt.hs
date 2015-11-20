@@ -10,8 +10,9 @@ Maintainer  : public@hjwylde.com
 Options and handler for the git-fmt command.
 -}
 
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Git.Fmt (
     -- * Options
@@ -21,37 +22,37 @@ module Git.Fmt (
     handle,
 ) where
 
-import              Control.Monad.Catch     (MonadMask)
-import              Control.Monad.Extra
-import              Control.Monad.IO.Class
-import              Control.Monad.Logger
-import              Control.Monad.Parallel  (MonadParallel)
-import qualified    Control.Monad.Parallel  as Parallel
-import              Control.Monad.Reader
+import           Control.Monad.Catch    (MonadMask)
+import           Control.Monad.Extra
+import           Control.Monad.IO.Class
+import           Control.Monad.Logger
+import           Control.Monad.Parallel (MonadParallel)
+import qualified Control.Monad.Parallel as Parallel
+import           Control.Monad.Reader
 
-import              Data.List.Extra     (chunksOf, linesBy, lower, nub)
-import qualified    Data.Text           as T
-import              Data.Yaml           (prettyPrintParseException)
-import              Data.Yaml.Include   (decodeFileEither)
+import           Data.List.Extra   (chunksOf, linesBy, lower, nub)
+import qualified Data.Text         as T
+import           Data.Yaml         (prettyPrintParseException)
+import           Data.Yaml.Include (decodeFileEither)
 
-import Git.Fmt.Config as Config
+import Git.Fmt.Config    as Config
+import Git.Fmt.Directory
+import Git.Fmt.Exit
 import Git.Fmt.Process
 
 import Prelude hiding (read)
 
-import System.Directory.Extra   hiding (withCurrentDirectory)
-import System.Directory.Extra'
+import System.Directory.Extra hiding (withCurrentDirectory)
 import System.Exit
 import System.FilePath
 import System.IO.Temp
-import System.IO.Extra'
 
 -- | Options.
 data Options = Options {
-        optChatty   :: Chatty,
-        optNull     :: Bool,
-        optMode     :: Mode,
-        argPaths    :: [FilePath]
+        optChatty :: Chatty,
+        optNull   :: Bool,
+        optMode   :: Mode,
+        argPaths  :: [FilePath]
     }
     deriving (Eq, Show)
 
