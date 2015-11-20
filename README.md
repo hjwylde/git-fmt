@@ -85,8 +85,8 @@ Extensions is pretty self explanatory, but if you use the same extension more th
 
 #### Examples
 
-See the [examples/](https://github.com/hjwylde/git-fmt/tree/master/examples/) directory for some
-    common pretty-printers and their corresponding omnifmt config.
+See the [docs/example-configs/](https://github.com/hjwylde/git-fmt/tree/master/docs/example-configs/)
+    directory for some common pretty-printers and their corresponding omnifmt config.
 Just don't forget to actually call the config file `.omnifmt.yaml`!
 
 **NB:** Be careful when using these examples, I have not tested the pretty-printers fully to check
