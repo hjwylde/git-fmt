@@ -1,4 +1,4 @@
 haskell:
-    extensions: ["hs", "lhs"]
+    extensions: ["hs"]
     command: "stylish-haskell"
 
