@@ -1,16 +1,16 @@
 
 {-|
-Module      : System.Directory.Extra'
-Description : Extra extra directory utilities.
+Module      : Git.Fmt.Directory
+Description : Extra directory utilities.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Extra extra directory utilities.
+Extra directory utilities.
 -}
 
-module System.Directory.Extra' (
+module Git.Fmt.Directory (
     -- * Changing directories
     withCurrentDirectory,
 ) where
@@ -18,7 +18,7 @@ module System.Directory.Extra' (
 import Control.Monad.Catch    (MonadMask, bracket)
 import Control.Monad.IO.Class
 
-import System.Directory
+import System.Directory.Extra hiding (withCurrentDirectory)
 
 -- | @withCurrentDirectory dir action@ performs @action@ with the current directory set to @dir@.
 --   The current directory is reset back to what it was afterwards.
