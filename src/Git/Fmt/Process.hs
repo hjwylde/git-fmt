@@ -22,10 +22,10 @@ import Control.Monad.Logger
 
 import Data.Text hiding (unwords)
 
-import              System.Exit
-import              System.IO.Extra'
-import              System.Process (CreateProcess, CmdSpec(..))
-import qualified    System.Process as System
+import           System.Exit
+import           System.IO.Extra'
+import           System.Process   (CmdSpec (..), CreateProcess)
+import qualified System.Process   as System
 
 -- | Runs the given executable with the arguments.
 --   Returns the exit code, stdout and stderr.

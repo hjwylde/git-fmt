@@ -15,7 +15,7 @@ module System.Directory.Extra' (
     withCurrentDirectory,
 ) where
 
-import Control.Monad.Catch (MonadMask, bracket)
+import Control.Monad.Catch    (MonadMask, bracket)
 import Control.Monad.IO.Class
 
 import System.Directory

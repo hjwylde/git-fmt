@@ -18,14 +18,14 @@ module Main (
 
 import Control.Monad
 import Control.Monad.Logger
-import Control.Monad.Parallel (MonadParallel(..))
+import Control.Monad.Parallel (MonadParallel (..))
 
-import              Data.List.Extra     (dropEnd, lower)
-import              Data.Text           (Text)
-import qualified    Data.Text           as T
-import qualified    Data.Text.Encoding  as T
-import qualified    Data.Text.IO        as T
-import              Data.Time           (getZonedTime, formatTime, defaultTimeLocale)
+import           Data.List.Extra    (dropEnd, lower)
+import           Data.Text          (Text)
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
+import qualified Data.Text.IO       as T
+import           Data.Time          (defaultTimeLocale, formatTime, getZonedTime)
 
 import Git.Fmt
 import Git.Fmt.Options.Applicative.Parser

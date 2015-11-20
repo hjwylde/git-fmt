@@ -27,10 +27,10 @@ module Git.Fmt.Config (
 ) where
 
 import Data.Aeson.Types
-import Data.HashMap.Lazy   (toList)
-import Data.List.Extra     (find)
-import Data.Maybe          (fromJust, isJust)
-import Data.Text           (Text, isInfixOf, replace)
+import Data.HashMap.Lazy (toList)
+import Data.List.Extra   (find)
+import Data.Maybe        (fromJust, isJust)
+import Data.Text         (Text, isInfixOf, replace)
 
 -- | A list of programs.
 data Config = Config {
@@ -63,9 +63,9 @@ supported config = isJust . programFor config
 -- | A program has a semantic name, associated extensions and command.
 --   The command string may contain variables to be replaced by surrounding them with '{{..}}'.
 data Program = Program {
-    name        :: Text,
-    extensions  :: [Text],
-    command     :: Text
+    name       :: Text,
+    extensions :: [Text],
+    command    :: Text
     }
     deriving (Eq, Show)
 
