@@ -54,7 +54,7 @@ It also provides a dry-run mode that will show you which files need prettifying.
 
 Configuration is done through an `.omnifmt.yaml` file in the repository's top-level directory.
 
-To show how, here's an example `.omnifmt.yaml`:
+To show how, here's an example `.omnifmt.yaml` with 4 programs:
 ```yaml
 haskell:
     extensions: ["hs", "lhs"]
@@ -66,12 +66,18 @@ javascript:
 
 json:
     extensions: ["json"]
-    command:    "json_pp < {{input}} > {{output}}"
+    command:    "json_pp"
+
+ruby:
+    extensions: ["rb"]
+    command:    "ruby-beautify {{input}}"
 ```
 
 That's all it takes!
-Each command must declare how to read the input file and how to write to the temporary file.
-The temporary file is used to compare whether the original input was pretty or ugly before writing
+Each command declares how to read the input file and how to write to the output file.
+If the input variable is omitted, it is fed to the command through `stdin`.
+Likewise if the output variable is omitted it is read from `stdout`.
+The output file is used to compare whether the original input was pretty or ugly before writing
     to the original.
 
 Extensions is pretty self explanatory, but if you use the same extension more than once then

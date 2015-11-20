@@ -15,21 +15,22 @@ Configuration data structures.
 module Git.Fmt.Config (
     -- * Config
     Config(..),
-    emptyConfig,
+    emptyConfig, programFor, unsafeProgramFor, supported,
 
     -- * Program
     Program(..),
-    emptyProgram, programFor, unsafeProgramFor, supported,
+    emptyProgram, substitute, usesInputVariable, usesOutputVariable, inputVariableName,
+    outputVariableName,
 
     -- * Helper functions
-    fileName,
+    defaultFileName,
 ) where
 
 import Data.Aeson.Types
-import Data.HashMap.Lazy    (toList)
-import Data.List            (find)
-import Data.Maybe           (fromJust, isJust)
-import Data.Text            (Text)
+import Data.HashMap.Lazy   (toList)
+import Data.List.Extra     (find)
+import Data.Maybe          (fromJust, isJust)
+import Data.Text           (Text, isInfixOf, replace)
 
 -- | A list of programs.
 data Config = Config {
@@ -46,6 +47,18 @@ instance FromJSON Config where
 -- | The empty config (no programs).
 emptyConfig :: Config
 emptyConfig = Config []
+
+-- | Attempts to find a program for the given extension.
+programFor :: Config -> Text -> Maybe Program
+programFor config ext = find (\program -> ext `elem` extensions program) (programs config)
+
+-- | Finds a program for the given extension or errors.
+unsafeProgramFor :: Config -> Text -> Program
+unsafeProgramFor config = fromJust . programFor config
+
+-- | Checks if the given extension is supported (e.g., there is a program for it).
+supported :: Config -> Text -> Bool
+supported config = isJust . programFor config
 
 -- | A program has a semantic name, associated extensions and command.
 --   The command string may contain variables to be replaced by surrounding them with '{{..}}'.
@@ -64,19 +77,27 @@ instance FromJSON Program where
 emptyProgram :: Program
 emptyProgram = Program "" [] "false"
 
--- | Attempts to find a program for the given extension.
-programFor :: Config -> Text -> Maybe Program
-programFor config ext = find (\program -> ext `elem` extensions program) (programs config)
+-- | Substitutes the mapping throughout the command.
+substitute :: Text -> [(Text, Text)] -> Text
+substitute = foldr (uncurry replace)
 
--- | Finds a program for the given extension or errors.
-unsafeProgramFor :: Config -> Text -> Program
-unsafeProgramFor config = fromJust . programFor config
+-- | Checks whether the text uses the input variable.
+usesInputVariable :: Text -> Bool
+usesInputVariable = isInfixOf inputVariableName
 
--- | Checks if the given extension is supported (e.g., there is a program for it).
-supported :: Config -> Text -> Bool
-supported config = isJust . programFor config
+-- | Checks whether the text uses the output variable.
+usesOutputVariable :: Text -> Bool
+usesOutputVariable = isInfixOf outputVariableName
 
--- | The file name of the default config file.
-fileName :: String
-fileName = ".omnifmt.yaml"
+-- | The input variable name.
+inputVariableName :: Text
+inputVariableName = "{{input}}"
+
+-- | The output variable name.
+outputVariableName :: Text
+outputVariableName = "{{output}}"
+
+-- | The file name of the default config.
+defaultFileName :: FilePath
+defaultFileName = ".omnifmt.yaml"
 
