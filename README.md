@@ -62,7 +62,7 @@ haskell:
 
 javascript:
     extensions: ["js"]
-    command:    "js-beautify {{input}} > {{output}}"
+    command:    "js-beautify -"
 
 json:
     extensions: ["json"]

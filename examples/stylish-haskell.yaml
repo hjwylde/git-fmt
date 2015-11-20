@@ -1,3 +1,4 @@
+# https://github.com/jaspervdj/stylish-haskell
 haskell:
     extensions: ["hs"]
     command:    "stylish-haskell"
