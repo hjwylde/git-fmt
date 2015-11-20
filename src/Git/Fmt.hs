@@ -37,6 +37,7 @@ import           Data.Yaml.Include (decodeFileEither)
 
 import Git.Fmt.Config    as Config
 import Git.Fmt.Directory
+import Git.Fmt.Exit
 import Git.Fmt.Process
 
 import Prelude hiding (read)
@@ -44,7 +45,6 @@ import Prelude hiding (read)
 import System.Directory.Extra hiding (withCurrentDirectory)
 import System.Exit
 import System.FilePath
-import System.IO.Extra'
 import System.IO.Temp
 
 -- | Options.

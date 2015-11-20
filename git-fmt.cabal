@@ -46,11 +46,11 @@ library
         Git.Fmt.Options.Applicative.Parser
     other-modules:
         Git.Fmt.Config,
-        Git.Fmt.Directory
+        Git.Fmt.Directory,
+        Git.Fmt.Exit,
         Git.Fmt.Process,
         Git.Fmt.Version,
-        Paths_git_fmt,
-        System.IO.Extra'
+        Paths_git_fmt
 
     default-language: Haskell2010
     other-extensions:
