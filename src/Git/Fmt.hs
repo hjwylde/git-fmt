@@ -21,14 +21,16 @@ module Git.Fmt (
     handle,
 ) where
 
-import Control.Monad.Catch      (MonadMask)
-import Control.Monad.Extra
-import Control.Monad.IO.Class
-import Control.Monad.Logger
-import Control.Monad.Reader
+import              Control.Monad.Catch     (MonadMask)
+import              Control.Monad.Extra
+import              Control.Monad.IO.Class
+import              Control.Monad.Logger
+import              Control.Monad.Parallel  (MonadParallel)
+import qualified    Control.Monad.Parallel  as Parallel
+import              Control.Monad.Reader
 
+import              Data.List.Extra     (chunksOf, linesBy, lower, nub, replace)
 import qualified    Data.Text           as T
-import              Data.List.Extra     (linesBy, lower, nub, replace)
 import              Data.Yaml           (prettyPrintParseException)
 import              Data.Yaml.Include   (decodeFileEither)
 
@@ -62,7 +64,7 @@ data Mode = Normal | DryRun
     deriving (Eq, Show)
 
 -- | Builds the files according to the options.
-handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
+handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m) => Options -> m ()
 handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init dir) $ do
     filePaths <- fmap (nub . concat) $ paths >>= mapM
         (\path -> ifM (liftIO $ doesDirectoryExist path)
@@ -78,8 +80,8 @@ handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
 
-    flip runReaderT config $ withSystemTempDirectory "git-fmt" $ \tmpDir ->
-        forM_ supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
+    flip runReaderT config . withSystemTempDirectory "git-fmt" $ \tmpDir ->
+        Parallel.sequence_ . map sequence . nChunks 8 . flip map supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
             (fmt options filePath (tmpDir </> filePath))
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
@@ -87,6 +89,7 @@ handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init
             | null (argPaths options)   = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
             | optNull options           = return $ concatMap (linesBy (== '\0')) (argPaths options)
             | otherwise                 = return $ argPaths options
+        nChunks n xs = chunksOf (maximum [1, length xs `div` n]) xs
 
 fmt :: (MonadIO m, MonadLogger m, MonadReader Config m) => Options -> FilePath -> FilePath -> m ()
 fmt options filePath tmpFilePath = do
@@ -94,12 +97,10 @@ fmt options filePath tmpFilePath = do
     let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension filePath)
 
     (exitCode, _, stderr) <- runProgram program filePath tmpFilePath
-    case exitCode of
-        ExitSuccess         -> diff options filePath tmpFilePath
-        ExitFailure code    -> if code >= 126
-            then panicWith stderr code
-            else $(logWarn) (T.pack $ filePath ++ ": error") >>
-                 $(logDebug) (T.pack stderr)
+    if exitCode == ExitSuccess
+        then diff options filePath tmpFilePath
+        else $(logWarn) (T.pack $ filePath ++ ": error") >>
+             $(logDebug) (T.pack stderr)
 
 diff :: (MonadIO m, MonadLogger m) => Options -> FilePath -> FilePath -> m ()
 diff options filePath tmpFilePath = do
@@ -135,7 +136,7 @@ runProgram program inputFilePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
     runCommand $ foldr (uncurry replace) (T.unpack $ command program) [
-        ("{{inputFilePath}}", inputFilePath),
-        ("{{tmpFilePath}}", tmpFilePath)
+        ("{{input}}", inputFilePath),
+        ("{{output}}", tmpFilePath)
         ]
 
