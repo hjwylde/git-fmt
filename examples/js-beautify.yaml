@@ -1,0 +1,4 @@
+javascript:
+    extensions: ["js"]
+    command:    "js-beautify -"
+

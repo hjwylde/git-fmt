@@ -1,0 +1,4 @@
+json:
+    extensions: ["json"]
+    command:    "json_pp"
+
