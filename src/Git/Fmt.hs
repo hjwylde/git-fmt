@@ -35,8 +35,7 @@ import qualified Data.Text         as T
 import           Data.Yaml         (prettyPrintParseException)
 import           Data.Yaml.Include (decodeFileEither)
 
-import Git.Fmt.Config    as Config
-import Git.Fmt.Directory
+import Git.Fmt.Config  as Config
 import Git.Fmt.Exit
 import Git.Fmt.Process
 
