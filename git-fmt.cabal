@@ -46,7 +46,6 @@ library
         Git.Fmt.Options.Applicative.Parser
     other-modules:
         Git.Fmt.Config,
-        Git.Fmt.Directory,
         Git.Fmt.Exit,
         Git.Fmt.Process,
         Git.Fmt.Version,
