@@ -39,8 +39,7 @@ import Git.Fmt.Process
 
 import Prelude hiding (read)
 
-import System.Directory.Extra   hiding (withCurrentDirectory)
-import System.Directory.Extra'
+import System.Directory.Extra hiding (withCurrentDirectory)
 import System.Exit
 import System.FilePath
 import System.IO.Temp
@@ -65,17 +64,18 @@ data Mode = Normal | DryRun
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m) => Options -> m ()
-handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- fmap (nub . concat) $ paths >>= mapM
+handle options = do
+    gitDir      <- findGitDirectory
+    filePaths   <- fmap (nub . concat) $ paths gitDir >>= mapM
         (\path -> ifM (liftIO $ doesDirectoryExist path)
             (liftIO $ listFilesRecursive path)
             (return [path])
             )
 
-    unlessM (liftIO $ doesFileExist Config.fileName) $ panic (Config.fileName ++ ": not found")
+    unlessM (liftIO . doesFileExist $ gitDir </> Config.fileName) $ panic (gitDir </> Config.fileName ++ ": not found")
 
-    config <- liftIO (decodeFileEither Config.fileName) >>= \ethr -> case ethr of
-        Left error      -> panic $ Config.fileName ++ ": error\n" ++ prettyPrintParseException error
+    config <- liftIO (decodeFileEither $ gitDir </> Config.fileName) >>= \ethr -> case ethr of
+        Left error      -> panic $ gitDir </> Config.fileName ++ ": error\n" ++ prettyPrintParseException error
         Right config    -> return config
 
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
@@ -85,8 +85,8 @@ handle options = findTopLevelGitDirectory >>= \dir -> withCurrentDirectory (init
             (fmt options filePath (tmpDir </> filePath))
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
-        paths
-            | null (argPaths options)   = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
+        paths gitDir
+            | null (argPaths options)   = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z", gitDir]
             | optNull options           = return $ concatMap (linesBy (== '\0')) (argPaths options)
             | otherwise                 = return $ argPaths options
         nChunks n xs = chunksOf (maximum [1, length xs `div` n]) xs
@@ -123,12 +123,12 @@ normal filePath tmpFilePath = do
 dryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
 dryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
 
-findTopLevelGitDirectory :: (MonadIO m, MonadLogger m) => m String
-findTopLevelGitDirectory = do
+findGitDirectory :: (MonadIO m, MonadLogger m) => m String
+findGitDirectory = do
     (exitCode, stdout, _) <- runProcess "git" ["rev-parse", "--show-toplevel"]
 
     if exitCode == ExitSuccess
-        then return stdout
+        then return $ init stdout
         else panic ".git/: not found"
 
 runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m (ExitCode, String, String)
