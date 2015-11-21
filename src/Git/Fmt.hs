@@ -21,7 +21,6 @@ module Git.Fmt (
 ) where
 
 import Control.Monad
-import Control.Monad.Catch      (MonadMask, bracket)
 import Control.Monad.IO.Class
 import Control.Monad.Logger
 
@@ -47,9 +46,10 @@ data Options = Options {
     deriving (Eq, Show)
 
 -- | Builds the files according to the options.
-handle :: (MonadIO m, MonadLogger m, MonadMask m) => Options -> m ()
-handle options = run "git" ["rev-parse", "--show-toplevel"] >>= \dir -> withCurrentDirectory (init dir) $ do
-    filePaths <- if null (argFilePaths options) then lines <$> run "git" ["ls-files"] else return (argFilePaths options)
+handle :: (MonadIO m, MonadLogger m) => Options -> m ()
+handle options = do
+    gitDir      <- init <$> run "git" ["rev-parse", "--show-toplevel"]
+    filePaths   <- if null (argFilePaths options) then lines <$> run "git" ["ls-files", gitDir] else return (argFilePaths options)
 
     filterM (liftIO . doesFileExist) filePaths >>= mapM_ (\filePath ->
         maybe (return ()) (fmt options filePath) (languageOf $ takeExtension filePath))
@@ -73,7 +73,4 @@ fmt options filePath language = do
                     $(logInfo) $ pack (filePath ++ ": ugly" ++ if optDryRun options then "" else " (-> pretty)")
 
                     unless (optDryRun options) $ liftIO (writeFile filePath output)
-
-withCurrentDirectory :: (MonadIO m, MonadMask m) => FilePath -> m a -> m a
-withCurrentDirectory dir action = bracket (liftIO getCurrentDirectory) (liftIO . setCurrentDirectory) $ \_ -> liftIO (setCurrentDirectory dir) >> action
 
