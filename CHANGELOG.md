@@ -1,11 +1,19 @@
 ## Changelog
 
-#### Upcoming in master
+#### Upcoming
+
+*Revisions*
+* Fixed a bug where passing arguments would only work when running in the git directory. ([#57](https://github.com/hjwylde/git-fmt/issues/57))
 
 #### v0.2.1.0
 
 *Minor*
 * Added default use of stdin and stdout when variables not specified in a program command. ([#49](https://github.com/hjwylde/git-fmt/issues/49))
+
+#### v0.2.0.1
+
+*Revisions*
+* Fixed a bug where passing arguments would only work when running in the git directory. ([#57](https://github.com/hjwylde/git-fmt/issues/57))
 
 #### v0.2.0.0
 
@@ -27,6 +35,11 @@
 * Fixed debug log messages to have timestamp and log level on all lines. ([#33](https://github.com/hjwylde/git-fmt/issues/33))
 * Tidied up error messages from git. ([#40](https://github.com/hjwylde/git-fmt/issues/40))
 * Tidied up error messages from parsing the config. ([#43](https://github.com/hjwylde/git-fmt/issues/43))
+
+#### v0.1.0.3
+
+*Revisions*
+* Fixed a bug where passing arguments would only work when running in the git directory. ([#57](https://github.com/hjwylde/git-fmt/issues/57))
 
 #### v0.1.0.2
 
