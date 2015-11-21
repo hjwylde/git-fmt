@@ -2,6 +2,8 @@
 
 #### Upcoming
 
+#### v0.2.1.1
+
 *Revisions*
 * Fixed a bug where passing arguments would only work when running in the git directory. ([#57](https://github.com/hjwylde/git-fmt/issues/57))
 
