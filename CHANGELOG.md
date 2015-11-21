@@ -2,6 +2,8 @@
 
 #### Upcoming in master
 
+* Fixed a bug where passing arguments would only work when running in the git directory.
+
 #### v0.1.0.2
 
 * Fixed a bug where UTF-8 characters in strings weren't printed properly.
