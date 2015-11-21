@@ -2,6 +2,8 @@
 
 #### Upcoming in master
 
+#### v0.1.0.3
+
 * Fixed a bug where passing arguments would only work when running in the git directory.
 
 #### v0.1.0.2
