@@ -33,5 +33,5 @@ install:
 script:
 - stack $ARGS --no-terminal --skip-ghc-check test
 - hlint .
-- git fmt -m dry-run .
+- git fmt -m dry-run
 
