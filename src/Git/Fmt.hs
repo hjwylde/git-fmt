@@ -133,12 +133,12 @@ findGitDirectory = do
         else panic ".git/: not found"
 
 runProgram :: (MonadIO m, MonadLogger m) => Program -> FilePath -> FilePath -> m (ExitCode, String, String)
-runProgram program inputFilePath tmpFilePath = do
+runProgram program filePath tmpFilePath = do
     liftIO $ createDirectoryIfMissing True (takeDirectory tmpFilePath)
 
     runCommand . T.unpack $ substitute (T.concat [command program, inputSuffix, outputSuffix]) [
-        (inputVariableName, T.pack $ '"':inputFilePath ++ "\""),
-        (outputVariableName, T.pack $ '"':tmpFilePath ++ "\"")
+        (inputVariableName, quote filePath),
+        (outputVariableName, quote tmpFilePath)
         ]
     where
         inputSuffix
@@ -147,4 +147,8 @@ runProgram program inputFilePath tmpFilePath = do
         outputSuffix
             | usesOutputVariable (command program)  = T.empty
             | otherwise                             = T.pack " > " `T.append` outputVariableName
+        quote str   = T.pack $ '"':concatMap escape str ++ "\""
+        escape '\\' = "\\\\"
+        escape '"'  = "\\\""
+        escape c    = [c]
 
