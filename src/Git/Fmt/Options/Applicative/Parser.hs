@@ -60,15 +60,15 @@ gitFmt = Options
         long "null", short '0',
         help "Input files are delimited by a null terminator instead of white space"
         ])
-    <*> natOption (mconcat [
-        long "threads", metavar "INT",
-        value Nothing, showDefaultWith $ const "number of processors",
-        help "Specify the number of threads to use"
-        ])
     <*> modeOption (mconcat [
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
         help "Specify the mode as either `normal' or `dry-run'"
+        ])
+    <*> natOption (mconcat [
+        long "threads", metavar "INT",
+        value Nothing, showDefaultWith $ const "number of processors",
+        help "Specify the number of threads to use"
         ])
     <*> many (strArgument $ mconcat [
         metavar "-- PATHS..."

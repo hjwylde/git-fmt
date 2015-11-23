@@ -51,11 +51,11 @@ import System.IO.Temp
 
 -- | Options.
 data Options = Options {
-        optChatty     :: Chatty,
-        optNull       :: Bool,
-        optNumThreads :: Maybe Int,
-        optMode       :: Mode,
-        argPaths      :: [FilePath]
+        optChatty  :: Chatty,
+        optNull    :: Bool,
+        optMode    :: Mode,
+        optThreads :: Maybe Int,
+        argPaths   :: [FilePath]
     }
     deriving (Eq, Show)
 
@@ -77,7 +77,7 @@ handle options = do
             (return [path])
             )
     numThreads  <- liftIO getNumCapabilities >>= \numCapabilities ->
-        return $ fromMaybe numCapabilities (optNumThreads options)
+        return $ fromMaybe numCapabilities (optThreads options)
 
     unlessM (liftIO . doesFileExist $ gitDir </> Config.defaultFileName) $ panic (gitDir </> Config.defaultFileName ++ ": not found")
 
