@@ -2,6 +2,8 @@
 
 #### Upcoming
 
+#### v0.2.2.0
+
 *Minor*
 * Added `--threads` option to change the number of threads for parallelisation. ([#54](https://github.com/hjwylde/git-fmt/issues/54))
 
