@@ -57,7 +57,7 @@ haskell:
 
 javascript:
     extensions: ["js"]
-    command:    "js-beautify -"
+    command:    "js-beautify -f {{input}}"
 
 json:
     extensions: ["json"]
@@ -65,7 +65,7 @@ json:
 
 ruby:
     extensions: ["rb"]
-    command:    "ruby-beautify {{input}}"
+    command:    "ruby-beautify"
 ```
 
 Each command declares how to read the *input file* and how to write to the *output file*.
