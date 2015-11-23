@@ -2,6 +2,13 @@
 
 #### Upcoming
 
+*Minor*
+* Added `--threads` option to change the number of threads for parallelisation. ([#54](https://github.com/hjwylde/git-fmt/issues/54))
+
+*Revisions*
+* Changed parallelisation to use the number of capabilities (and processors) for the number of
+  threads by default. ([#54](https://github.com/hjwylde/git-fmt/issues/54))
+
 #### v0.2.1.1
 
 *Revisions*

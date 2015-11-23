@@ -15,6 +15,7 @@ module Git.Fmt.Options.Applicative.Parser (
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
+import Data.Char    (isDigit)
 import Data.Version (showVersion)
 
 import Options.Applicative
@@ -59,6 +60,11 @@ gitFmt = Options
         long "null", short '0',
         help "Input files are delimited by a null terminator instead of white space"
         ])
+    <*> natOption (mconcat [
+        long "threads", metavar "INT",
+        value Nothing, showDefaultWith $ const "number of processors",
+        help "Specify the number of threads to use"
+        ])
     <*> modeOption (mconcat [
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
@@ -68,7 +74,10 @@ gitFmt = Options
         metavar "-- PATHS..."
         ])
     where
-        modeOption = option $ readerAsk >>= \opt -> case opt of
+        natOption   = option $ readerAsk >>= \opt -> if all isDigit opt
+            then return $ Just (read opt :: Int)
+            else readerError $ "not a natural number `" ++ opt ++ "'"
+        modeOption  = option $ readerAsk >>= \opt -> case opt of
             "normal"    -> return Normal
             "dry-run"   -> return DryRun
             _           -> readerError $ "unrecognised mode `" ++ opt ++ "'"
