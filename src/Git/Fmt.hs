@@ -22,6 +22,7 @@ module Git.Fmt (
     handle,
 ) where
 
+import           Control.Concurrent
 import           Control.Monad.Catch    (MonadMask)
 import           Control.Monad.Extra
 import           Control.Monad.IO.Class
@@ -72,6 +73,7 @@ handle options = do
             (liftIO $ listFilesRecursive path)
             (return [path])
             )
+    numThreads  <- liftIO getNumCapabilities
 
     unlessM (liftIO . doesFileExist $ gitDir </> Config.defaultFileName) $ panic (gitDir </> Config.defaultFileName ++ ": not found")
 
@@ -82,7 +84,7 @@ handle options = do
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
 
     flip runReaderT config . withSystemTempDirectory "git-fmt" $ \tmpDir ->
-        Parallel.sequence_ . map sequence . nChunks 8 . flip map supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
+        Parallel.sequence_ . map sequence . nChunks numThreads . flip map supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
             (fmt options filePath (tmpDir </> filePath))
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
