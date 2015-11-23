@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Revisions*
+* Added quoting to the command variables during substitution. ([#59](https://github.com/hjwylde/git-fmt/issues/59))
+
 #### v0.2.1.1
 
 *Revisions*
