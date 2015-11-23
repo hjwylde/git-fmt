@@ -22,6 +22,8 @@ module Git.Fmt (
     handle,
 ) where
 
+import           Control.Applicative
+import           Control.Concurrent
 import           Control.Monad.Catch    (MonadMask)
 import           Control.Monad.Extra
 import           Control.Monad.IO.Class
@@ -31,6 +33,7 @@ import qualified Control.Monad.Parallel as Parallel
 import           Control.Monad.Reader
 
 import           Data.List.Extra   (chunksOf, linesBy, lower, nub)
+import           Data.Maybe        (fromMaybe)
 import qualified Data.Text         as T
 import           Data.Yaml         (prettyPrintParseException)
 import           Data.Yaml.Include (decodeFileEither)
@@ -48,10 +51,11 @@ import System.IO.Temp
 
 -- | Options.
 data Options = Options {
-        optChatty :: Chatty,
-        optNull   :: Bool,
-        optMode   :: Mode,
-        argPaths  :: [FilePath]
+        optChatty     :: Chatty,
+        optNull       :: Bool,
+        optNumThreads :: Maybe Int,
+        optMode       :: Mode,
+        argPaths      :: [FilePath]
     }
     deriving (Eq, Show)
 
@@ -72,6 +76,8 @@ handle options = do
             (liftIO $ listFilesRecursive path)
             (return [path])
             )
+    numThreads  <- liftIO getNumCapabilities >>= \numCapabilities ->
+        return $ fromMaybe numCapabilities (optNumThreads options)
 
     unlessM (liftIO . doesFileExist $ gitDir </> Config.defaultFileName) $ panic (gitDir </> Config.defaultFileName ++ ": not found")
 
@@ -82,7 +88,7 @@ handle options = do
     let supportedFilePaths = filter (supported config . T.pack . drop 1 . lower . takeExtension) filePaths
 
     flip runReaderT config . withSystemTempDirectory "git-fmt" $ \tmpDir ->
-        Parallel.sequence_ . map sequence . nChunks 8 . flip map supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
+        Parallel.sequence_ . map sequence . nChunks numThreads . flip map supportedFilePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
             (fmt options filePath (tmpDir </> filePath))
             ($(logWarn) $ T.pack (filePath ++ ": not found"))
     where
