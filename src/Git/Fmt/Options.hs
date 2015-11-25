@@ -1,16 +1,16 @@
 
 {-|
-Module      : Git.Fmt.Options.Applicative.Parser
-Description : Optparse utilities for the git-fmt command.
+Module      : Git.Fmt.Options
+Description : Optparse utilities.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Optparse utilities for the git-fmt command.
+Optparse utilities.
 -}
 
-module Git.Fmt.Options.Applicative.Parser (
+module Git.Fmt.Options (
     -- * Optparse for GitFmt
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where

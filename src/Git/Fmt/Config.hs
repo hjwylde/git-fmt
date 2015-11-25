@@ -15,7 +15,7 @@ Configuration data structures.
 module Git.Fmt.Config (
     -- * Config
     Config(..),
-    emptyConfig, programFor, unsafeProgramFor, supported,
+    emptyConfig, readConfig, nearestConfigFile, programFor, unsafeProgramFor, supported,
 
     -- * Program
     Program(..),
@@ -26,11 +26,23 @@ module Git.Fmt.Config (
     defaultFileName,
 ) where
 
+import Control.Arrow          (second)
+import Control.Monad.Extra
+import Control.Monad.IO.Class
+import Control.Monad.Logger
+
 import Data.Aeson.Types
 import Data.HashMap.Lazy (toList)
-import Data.List.Extra   (find)
+import Data.List         (find)
 import Data.Maybe        (fromJust, isJust)
-import Data.Text         (Text, isInfixOf, replace)
+import Data.Text         (Text, cons, isInfixOf, pack, replace, snoc)
+import Data.Yaml         (prettyPrintParseException)
+import Data.Yaml.Include (decodeFileEither)
+
+import Git.Fmt.Exit
+
+import System.Directory
+import System.FilePath
 
 -- | A list of programs.
 data Config = Config {
@@ -47,6 +59,18 @@ instance FromJSON Config where
 -- | The empty config (no programs).
 emptyConfig :: Config
 emptyConfig = Config []
+
+-- | Reads the given config if possible or panics.
+readConfig :: (MonadIO m, MonadLogger m) => FilePath -> m Config
+readConfig fileName = liftIO (decodeFileEither fileName) >>= \ethr -> case ethr of
+    Left error      -> panic $ fileName ++ ": error\n" ++ prettyPrintParseException error
+    Right config    -> return config
+
+-- | Finds the nearest config file by searching from the given directory upwards.
+nearestConfigFile :: MonadIO m => FilePath -> m (Maybe FilePath)
+nearestConfigFile dir = findM (liftIO . doesFileExist) $ map (</> defaultFileName) parents
+    where
+        parents = takeWhile (\dir -> dir /= takeDrive dir) (iterate takeDirectory dir)
 
 -- | Attempts to find a program for the given extension.
 programFor :: Config -> Text -> Maybe Program
@@ -78,8 +102,12 @@ emptyProgram :: Program
 emptyProgram = Program "" [] "false"
 
 -- | Substitutes the mapping throughout the command.
+--   Arguments given have backslashes and double quotaiton marks escaped.
 substitute :: Text -> [(Text, Text)] -> Text
-substitute = foldr (uncurry replace)
+substitute = foldr (uncurry replace . second (quote . escape))
+    where
+        quote   = cons '"' . (`snoc` '"')
+        escape  = replace (pack "\"") (pack "\\\"") . replace (pack "\\") (pack "\\\\")
 
 -- | Checks whether the text uses the input variable.
 usesInputVariable :: Text -> Bool

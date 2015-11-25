@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Major*
+* Restricted arguments to being inside the repository. ([#34](https://github.com/hjwylde/git-fmt/issues/34))
+
 #### v0.2.2.0
 
 *Minor*
