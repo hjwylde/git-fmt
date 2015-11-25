@@ -10,8 +10,6 @@ Maintainer  : public@hjwylde.com
 Extra exit utilities.
 -}
 
-{-# LANGUAGE TemplateHaskell #-}
-
 module Git.Fmt.Exit (
     -- * Exiting
     panicWith, panic, exitFast,
@@ -26,7 +24,7 @@ import System.Exit
 
 -- | Panics, logging the error to stderr and exiting fast with the code.
 panicWith :: (MonadIO m, MonadLogger m) => String -> Int -> m a
-panicWith error code = $(logError) (pack error) >> exitFast code
+panicWith error code = logErrorN (pack error) >> exitFast code
 
 -- | Panics, logging the error to stderr and exiting fast with 128.
 panic :: (MonadIO m, MonadLogger m) => String -> m a

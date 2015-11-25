@@ -10,8 +10,6 @@ Maintainer  : public@hjwylde.com
 System process utilities.
 -}
 
-{-# LANGUAGE TemplateHaskell #-}
-
 module Git.Fmt.Process (
     -- * Run
     runProcess, runProcess_, runCommand, runCommand_, runCreateProcess, runCreateProcess_,
@@ -52,7 +50,7 @@ runCommand_ cmd = runCreateProcess_ (System.shell cmd) ""
 --   Returns the exit code, stdout and stderr.
 runCreateProcess :: (MonadIO m, MonadLogger m) => CreateProcess -> String -> m (ExitCode, String, String)
 runCreateProcess process stdin = do
-    $(logDebug) $ pack (case System.cmdspec process of
+    logDebugN $ pack (case System.cmdspec process of
         ShellCommand cmd    -> cmd
         RawCommand cmd args -> unwords (cmd:args)
         )

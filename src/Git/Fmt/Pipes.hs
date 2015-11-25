@@ -12,7 +12,6 @@ Producers and consumers for formatting files.
 
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Git.Fmt.Pipes (
     -- * Producers
@@ -54,7 +53,7 @@ filterFileSupported = ask >>= \config -> Pipes.filter (supported config . T.toLo
 
 filterFileExists :: (MonadIO m, MonadLogger m) => Pipe FilePath FilePath m ()
 filterFileExists = forever $ await >>= \filePath -> ifM (liftIO $ doesFileExist filePath)
-    (yield filePath) (lift . $(logWarn) . T.pack $ filePath ++ ": not found")
+    (yield filePath) (lift . logWarnN . T.pack $ filePath ++ ": not found")
 
 zipTemporaryFilePath :: MonadIO m => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
 zipTemporaryFilePath tmpDir = Pipes.mapM $ \filePath -> do
@@ -73,8 +72,8 @@ runProgram = Pipes.filterM $ \(uglyFilePath, prettyFilePath) -> do
         ]
     if exitCode == ExitSuccess
         then return True
-        else $(logWarn) (T.pack $ uglyFilePath ++ ": error") >>
-             $(logDebug) (T.pack stderr) >>
+        else logWarnN (T.pack $ uglyFilePath ++ ": error") >>
+             logDebugN (T.pack stderr) >>
              return False
     where
         inputSuffix program
@@ -90,15 +89,15 @@ runDiff = Pipes.filterM $ \(uglyFilePath, prettyFilePath) -> do
 
     case exitCode of
         ExitFailure 1   -> return True
-        ExitSuccess     -> $(logDebug) (T.pack $ uglyFilePath ++ ": pretty") >> return False
-        _               -> $(logWarn) (T.pack stderr) >> return False
+        ExitSuccess     -> logDebugN (T.pack $ uglyFilePath ++ ": pretty") >> return False
+        _               -> logWarnN (T.pack stderr) >> return False
 
 formatter :: (MonadIO m, MonadLogger m) => Consumer (FilePath, FilePath) m ()
 formatter = Pipes.mapM_ $ \(uglyFilePath, prettyFilePath) -> do
-    $(logInfo) $ T.pack (uglyFilePath ++ ": prettified")
+    logInfoN $ T.pack (uglyFilePath ++ ": prettified")
 
     liftIO $ renameFile prettyFilePath uglyFilePath
 
 dryRunner :: (MonadIO m, MonadLogger m) => Consumer (FilePath, FilePath) m ()
-dryRunner = Pipes.mapM_ $ \(uglyFilePath, _) -> $(logInfo) (T.pack $ uglyFilePath ++ ": ugly")
+dryRunner = Pipes.mapM_ $ \(uglyFilePath, _) -> logInfoN (T.pack $ uglyFilePath ++ ": ugly")
 
