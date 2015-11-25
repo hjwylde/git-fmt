@@ -7,6 +7,7 @@ License     : BSD3
 Maintainer  : public@hjwylde.com
 -}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_HADDOCK hide, prune #-}
 
 {-# LANGUAGE OverloadedStrings #-}
@@ -17,6 +18,7 @@ module Main (
 
 import Control.Monad
 import Control.Monad.Logger
+import Control.Monad.Parallel (MonadParallel (..))
 import Control.Monad.Reader
 
 import           Data.List.Extra    (dropEnd, lower)
@@ -37,6 +39,11 @@ import Prelude hiding (filter, log)
 
 import System.IO
 import System.Log.FastLogger
+
+instance MonadParallel m => MonadParallel (LoggingT m) where
+    bindM2 f ma mb = LoggingT $ \g -> bindM2 (f' g) (runLoggingT ma g) (runLoggingT mb g)
+        where
+            f' g a b = runLoggingT (f a b) g
 
 main :: IO ()
 main = do
