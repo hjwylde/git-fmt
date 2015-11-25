@@ -34,8 +34,8 @@ executable git-fmt
         extra == 1.4.*,
         fast-logger == 2.4.*,
         git-fmt,
+        mtl == 2.2.*,
         monad-logger == 0.3.*,
-        monad-parallel == 0.7.*,
         optparse-applicative == 0.11.*,
         text == 1.2.*,
         time == 1.5.*
@@ -44,10 +44,11 @@ library
     hs-source-dirs: src/
     exposed-modules:
         Git.Fmt,
-        Git.Fmt.Options.Applicative.Parser
-    other-modules:
         Git.Fmt.Config,
         Git.Fmt.Exit,
+        Git.Fmt.Options
+    other-modules:
+        Git.Fmt.Pipes,
         Git.Fmt.Process,
         Git.Fmt.Version,
         Paths_git_fmt
@@ -66,9 +67,9 @@ library
         extra == 1.4.*,
         filepath == 1.4.*,
         monad-logger == 0.3.*,
-        monad-parallel == 0.7.*,
         mtl == 2.2.*,
         optparse-applicative == 0.11.*,
+        pipes == 4.1.*,
         process == 1.2.*,
         temporary == 1.2.*,
         text == 1.2.*,

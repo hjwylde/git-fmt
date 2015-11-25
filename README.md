@@ -79,7 +79,8 @@ The extensions field is pretty self explanatory, but if you use the same extensi
 #### Examples
 
 See the [docs/example-configs/](https://github.com/hjwylde/git-fmt/tree/master/docs/example-configs/)
-    directory for some common pretty-printers and their corresponding omnifmt config.
+    directory for some common pretty-printers and their corresponding omnifmt config (pull requests
+    welcome for more).
 Just don't forget to actually call the config file `.omnifmt.yaml`!
 
 **NB:** I haven't tested them fully, be careful in case one is buggy.
