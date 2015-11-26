@@ -10,34 +10,47 @@ Maintainer  : public@hjwylde.com
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_HADDOCK hide, prune #-}
 
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Main (
     main,
 ) where
 
-import Control.Monad
-import Control.Monad.Logger
-import Control.Monad.Parallel (MonadParallel (..))
-import Control.Monad.Reader
+import           Control.Concurrent
+import           Control.Monad.Catch    (MonadMask (..))
+import           Control.Monad.Except
+import           Control.Monad.Extra
+import           Control.Monad.Logger
+import           Control.Monad.Parallel (MonadParallel (..))
+import qualified Control.Monad.Parallel as Parallel
+import           Control.Monad.Reader
 
-import           Data.List.Extra    (dropEnd, lower)
-import           Data.Maybe         (fromJust, isNothing)
+import           Data.List.Extra    (dropEnd, linesBy, lower, (\\))
+import           Data.Maybe         (fromJust, fromMaybe, isNothing)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO       as T
 import           Data.Time          (defaultTimeLocale, formatTime, getZonedTime)
+import           Data.Tuple.Extra   (fst3)
 
-import Git.Fmt
 import Git.Fmt.Config  as Config
 import Git.Fmt.Exit
 import Git.Fmt.Options
+import Git.Fmt.Pipes
+import Git.Fmt.Process
 
 import Options.Applicative
 
-import Prelude hiding (filter, log)
+import Pipes
+import Pipes.Concurrent
+import Prelude          hiding (filter, log)
 
+import System.Directory.Extra
+import System.Exit
 import System.IO
+import System.IO.Temp
 import System.Log.FastLogger
 
 instance MonadParallel m => MonadParallel (LoggingT m) where
@@ -50,12 +63,48 @@ main = do
     options     <- customExecParser gitFmtPrefs gitFmtInfo
     let chatty  = optChatty options
 
-    flip runLoggingT (log chatty) $ filter chatty $ do
-        mConfigFilePath <- Config.nearestConfigFile "."
-        when (isNothing mConfigFilePath) $ panic (Config.defaultFileName ++ ": not found")
-        config <- Config.readConfig $ fromJust mConfigFilePath
+    flip runLoggingT (log chatty) . filter chatty $ do
+        checkGitRepository
 
-        runReaderT (handle options) config
+        mFilePath <- Config.nearestConfigFile "."
+        when (isNothing mFilePath) . panic_ $ Config.defaultFileName ++ ": not found"
+
+        mConfig <- Config.readConfig $ fromJust mFilePath
+        when (isNothing mConfig) . panic_ $ fromJust mFilePath ++ ": error"
+
+        runReaderT (handle options) (fromJust mConfig)
+
+checkGitRepository :: (MonadIO m, MonadLogger m) => m ()
+checkGitRepository = do
+    exitCode <- fst3 <$> runProcess "git" ["rev-parse", "--show-toplevel"]
+
+    when (exitCode /= ExitSuccess) $ panic_ ".git/: not found"
+
+handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
+handle options = do
+    filePaths <- runPanic $ if null (argPaths options)
+        then trackedFilePaths
+        else liftM2 (\\) trackedFilePaths (providedFilePaths options)
+
+    numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
+        return $ fromMaybe numCapabilities (optThreads options)
+
+    (output, input) <- liftIO $ spawn unbounded
+
+    withSystemTempDirectory "git-fmt" $ \tmpDir -> do
+        runEffect $ each filePaths >-> toOutput output
+
+        Parallel.forM_ [1..numThreads] $ \_ ->
+            runEffect (fromInput input >-> pipeline tmpDir >-> consumer (optMode options))
+
+providedFilePaths :: MonadIO m => Options -> m [FilePath]
+providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (argPaths options)
+    where
+        splitter = if optNull options then linesBy (== '\0') else (:[])
+        expandDirectory path = ifM (liftIO $ doesDirectoryExist path) (liftIO $ listFilesRecursive path) (return [path])
+
+trackedFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => m [FilePath]
+trackedFilePaths = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
 
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)

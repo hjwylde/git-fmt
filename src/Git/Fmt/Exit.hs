@@ -10,30 +10,30 @@ Maintainer  : public@hjwylde.com
 Extra exit utilities.
 -}
 
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Git.Fmt.Exit (
     -- * Exiting
-    panicWith, panic, exitFast,
+    panic, panic_, runPanic,
 ) where
 
-import Control.Monad.IO.Class
+import Control.Monad.Except
 import Control.Monad.Logger
 
 import Data.Text (pack)
 
 import System.Exit
 
--- | Panics, logging the error to stderr and exiting fast with the code.
-panicWith :: (MonadIO m, MonadLogger m) => String -> Int -> m a
-panicWith error code = $(logError) (pack error) >> exitFast code
+-- | Panics, logging the error to stderr and exiting fast with 128.
+panic :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => String -> m a
+panic error = logErrorN (pack error) >> throwError (ExitFailure 128)
 
 -- | Panics, logging the error to stderr and exiting fast with 128.
-panic :: (MonadIO m, MonadLogger m) => String -> m a
-panic error = panicWith error 128
+panic_ :: (MonadIO m, MonadLogger m) => String -> m a
+panic_ = runPanic . panic
 
--- | Exits fast with the given code (may be 0 for success!).
-exitFast :: (MonadIO m) => Int -> m a
-exitFast 0 = liftIO exitSuccess
-exitFast code = liftIO $ exitWith (ExitFailure code)
+-- | Runs the panic, calling 'exitWith' if the 'ExceptT' had an error thrown.
+runPanic :: MonadIO m => ExceptT ExitCode m a -> m a
+runPanic = runExceptT >=> either (liftIO . exitWith) return
 

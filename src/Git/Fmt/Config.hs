@@ -26,9 +26,9 @@ module Git.Fmt.Config (
     defaultFileName,
 ) where
 
-import Control.Arrow          (second)
+import Control.Arrow        (second)
+import Control.Monad.Except
 import Control.Monad.Extra
-import Control.Monad.IO.Class
 import Control.Monad.Logger
 
 import Data.Aeson.Types
@@ -39,9 +39,7 @@ import Data.Text         (Text, cons, isInfixOf, pack, replace, snoc)
 import Data.Yaml         (prettyPrintParseException)
 import Data.Yaml.Include (decodeFileEither)
 
-import Git.Fmt.Exit
-
-import System.Directory
+import System.Directory.Extra
 import System.FilePath
 
 -- | A list of programs.
@@ -60,11 +58,13 @@ instance FromJSON Config where
 emptyConfig :: Config
 emptyConfig = Config []
 
--- | Reads the given config if possible or panics.
-readConfig :: (MonadIO m, MonadLogger m) => FilePath -> m Config
-readConfig fileName = liftIO (decodeFileEither fileName) >>= \ethr -> case ethr of
-    Left error      -> panic $ fileName ++ ": error\n" ++ prettyPrintParseException error
-    Right config    -> return config
+-- | Reads the given config if possible.
+readConfig :: (MonadIO m, MonadLogger m) => FilePath -> m (Maybe Config)
+readConfig filePath = liftIO (decodeFileEither filePath) >>= \ethr -> case ethr of
+    Left error      -> do
+        logDebugN . pack $ filePath ++ ": error\n" ++ prettyPrintParseException error
+        return Nothing
+    Right config    -> return $ Just config
 
 -- | Finds the nearest config file by searching from the given directory upwards.
 nearestConfigFile :: MonadIO m => FilePath -> m (Maybe FilePath)
@@ -102,7 +102,7 @@ emptyProgram :: Program
 emptyProgram = Program "" [] "false"
 
 -- | Substitutes the mapping throughout the command.
---   Arguments given have backslashes and double quotaiton marks escaped.
+--   Arguments given are quoted and have any backslashes and double quotaiton marks escaped.
 substitute :: Text -> [(Text, Text)] -> Text
 substitute = foldr (uncurry replace . second (quote . escape))
     where

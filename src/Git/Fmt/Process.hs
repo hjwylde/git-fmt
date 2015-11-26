@@ -10,14 +10,15 @@ Maintainer  : public@hjwylde.com
 System process utilities.
 -}
 
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Git.Fmt.Process (
     -- * Run
     runProcess, runProcess_, runCommand, runCommand_, runCreateProcess, runCreateProcess_,
 ) where
 
-import Control.Monad.IO.Class
+import Control.Monad.Except
 import Control.Monad.Logger
 
 import Data.Text hiding (unwords)
@@ -25,8 +26,8 @@ import Data.Text hiding (unwords)
 import Git.Fmt.Exit
 
 import           System.Exit
-import           System.Process (CmdSpec (..), CreateProcess)
-import qualified System.Process as System
+import           System.Process.Extra (CmdSpec (..), CreateProcess)
+import qualified System.Process.Extra as System
 
 -- | Runs the given executable with the arguments.
 --   Returns the exit code, stdout and stderr.
@@ -35,7 +36,7 @@ runProcess cmd args = runCreateProcess (System.proc cmd args) ""
 
 -- | Runs the given executable with the arguments.
 --   Depending on the exit code, either logs the stderr and exits fast (128) or returns the stdout.
-runProcess_ :: (MonadIO m, MonadLogger m) => FilePath -> [String] -> m String
+runProcess_ :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => FilePath -> [String] -> m String
 runProcess_ cmd args = runCreateProcess_ (System.proc cmd args) ""
 
 -- | Runs the given command.
@@ -45,14 +46,14 @@ runCommand cmd = runCreateProcess (System.shell cmd) ""
 
 -- | Runs the given command.
 --   Depending on the exit code, either logs the stderr and exits fast (128) or returns the stdout.
-runCommand_ :: (MonadIO m, MonadLogger m) => String -> m String
+runCommand_ :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => String -> m String
 runCommand_ cmd = runCreateProcess_ (System.shell cmd) ""
 
 -- | Runs the given 'CreateProcess'.
 --   Returns the exit code, stdout and stderr.
 runCreateProcess :: (MonadIO m, MonadLogger m) => CreateProcess -> String -> m (ExitCode, String, String)
 runCreateProcess process stdin = do
-    $(logDebug) $ pack (case System.cmdspec process of
+    logDebugN $ pack (case System.cmdspec process of
         ShellCommand cmd    -> cmd
         RawCommand cmd args -> unwords (cmd:args)
         )
@@ -61,7 +62,7 @@ runCreateProcess process stdin = do
 
 -- | Runs the given 'CreateProcess'.
 --   Depending on the exit code, either logs the stderr and exits fast (128) or returns the stdout.
-runCreateProcess_ :: (MonadIO m, MonadLogger m) => CreateProcess -> String -> m String
+runCreateProcess_ :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => CreateProcess -> String -> m String
 runCreateProcess_ process stdin = do
     (exitCode, stdout, stderr) <- runCreateProcess process stdin
 

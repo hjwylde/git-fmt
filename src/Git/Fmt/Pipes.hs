@@ -1,41 +1,32 @@
 
 {-|
 Module      : Git.Fmt.Pipes
-Description : Producers and consumers for formatting files.
+Description : Pipeline for formatting files.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Producers and consumers for formatting files.
+Pipeline for formatting files.
 -}
 
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Git.Fmt.Pipes (
-    -- * Producers
-    trackedFilePaths,
-
-    -- * Filters
-    filterFileSupported, filterFileExists,
-
-    -- * Transformers
-    zipTemporaryFilePath, runProgram, runDiff,
-
-    -- * Consumers
-    formatter, dryRunner,
+    -- * The pipeline
+    pipeline, consumer,
 ) where
 
+import Control.Monad.Except
 import Control.Monad.Extra
 import Control.Monad.Logger
 import Control.Monad.Reader
 
-import           Data.List.Extra (linesBy)
-import qualified Data.Text       as T
+import qualified Data.Text as T
 
 import Git.Fmt.Config
+import Git.Fmt.Options
 import Git.Fmt.Process
 
 import           Pipes
@@ -45,17 +36,26 @@ import System.Directory.Extra
 import System.Exit
 import System.FilePath
 
--- | Yields all tracked file paths in the current git repository.
-trackedFilePaths :: (MonadIO m, MonadLogger m) => Producer FilePath m ()
-trackedFilePaths = each =<< linesBy (== '\0') <$> lift (runProcess_ "git" ["ls-files", "-z"])
+-- | A pipeline that filters applicable paths, runs the user program on them and diffs them.
+pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
+pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
 
+-- | A consumer for the given mode.
+consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
+consumer Normal = formatter
+consumer DryRun = dryRunner
+
+-- | Filters files that have languages supported by the config.
 filterFileSupported :: (MonadIO m, MonadReader Config m) => Pipe FilePath FilePath m ()
 filterFileSupported = ask >>= \config -> Pipes.filter (supported config . T.toLower . T.pack . drop 1 . takeExtension)
 
+-- | Filters files that exist.
 filterFileExists :: (MonadIO m, MonadLogger m) => Pipe FilePath FilePath m ()
 filterFileExists = forever $ await >>= \filePath -> ifM (liftIO $ doesFileExist filePath)
-    (yield filePath) (lift . $(logWarn) . T.pack $ filePath ++ ": not found")
+    (yield filePath) (lift . logWarnN . T.pack $ filePath ++ ": not found")
 
+-- | Zips the file path with a temporary file path.
+--   The temporary file path is created by concatenating the given directory with the file path.
 zipTemporaryFilePath :: MonadIO m => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
 zipTemporaryFilePath tmpDir = Pipes.mapM $ \filePath -> do
     liftIO $ createDirectoryIfMissing True (takeDirectory $ tmpDir </> filePath)
@@ -73,8 +73,8 @@ runProgram = Pipes.filterM $ \(uglyFilePath, prettyFilePath) -> do
         ]
     if exitCode == ExitSuccess
         then return True
-        else $(logWarn) (T.pack $ uglyFilePath ++ ": error") >>
-             $(logDebug) (T.pack stderr) >>
+        else logWarnN (T.pack $ uglyFilePath ++ ": error") >>
+             logDebugN (T.pack stderr) >>
              return False
     where
         inputSuffix program
@@ -90,15 +90,15 @@ runDiff = Pipes.filterM $ \(uglyFilePath, prettyFilePath) -> do
 
     case exitCode of
         ExitFailure 1   -> return True
-        ExitSuccess     -> $(logDebug) (T.pack $ uglyFilePath ++ ": pretty") >> return False
-        _               -> $(logWarn) (T.pack stderr) >> return False
+        ExitSuccess     -> logDebugN (T.pack $ uglyFilePath ++ ": pretty") >> return False
+        _               -> logWarnN (T.pack stderr) >> return False
 
 formatter :: (MonadIO m, MonadLogger m) => Consumer (FilePath, FilePath) m ()
 formatter = Pipes.mapM_ $ \(uglyFilePath, prettyFilePath) -> do
-    $(logInfo) $ T.pack (uglyFilePath ++ ": prettified")
+    logInfoN $ T.pack (uglyFilePath ++ ": prettified")
 
     liftIO $ renameFile prettyFilePath uglyFilePath
 
 dryRunner :: (MonadIO m, MonadLogger m) => Consumer (FilePath, FilePath) m ()
-dryRunner = Pipes.mapM_ $ \(uglyFilePath, _) -> $(logInfo) (T.pack $ uglyFilePath ++ ": ugly")
+dryRunner = Pipes.mapM_ $ \(uglyFilePath, _) -> logInfoN (T.pack $ uglyFilePath ++ ": ugly")
 
