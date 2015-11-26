@@ -66,13 +66,14 @@ readConfig filePath = liftIO (decodeFileEither filePath) >>= \ethr -> case ethr 
     Right config    -> return $ Just config
 
 -- | Finds the nearest config file by searching from the given directory upwards.
+--
 --   TODO (hjw): fix the bug where it won't search the root directory.
 nearestConfigFile :: MonadIO m => FilePath -> m (Maybe FilePath)
 nearestConfigFile dir = findM (liftIO . doesFileExist) $ map (</> defaultFileName) parents
     where
         parents = takeWhile (\dir -> dir /= takeDrive dir) (iterate takeDirectory dir)
 
--- | The file name of the default config.
+-- | The file name of the default config, '.omnifmt.yaml'.
 defaultFileName :: FilePath
 defaultFileName = ".omnifmt.yaml"
 
@@ -90,12 +91,14 @@ unsafeProgramFor config = fromJust . programFor config
 supported :: Config -> Text -> Bool
 supported config = isJust . programFor config
 
--- | A program has a semantic name, associated extensions and command.
---   The command string may contain variables to be replaced by surrounding them with '{{..}}'.
+-- | A program has a semantic name, associated extensions and formatting command.
+--   The command string may contain variables, denoted by strings surrounded with '{{..}}'.
+--   The command should return a 0 exit code for success, or a non-0 exit code for failure.
 data Program = Program {
-    name       :: Text,
-    extensions :: [Text], -- ^ A list of extensions, without a period prefix.
-    command    :: Text
+    name       :: Text,     -- ^ A semantic name (has no impact on formatting).
+    extensions :: [Text],   -- ^ A list of extensions, without a period prefix.
+    command    :: Text      -- ^ A command to run in a shell that prettifies an input file and
+                            --   writes to an output file.
     }
     deriving (Eq, Show)
 
@@ -103,7 +106,7 @@ instance FromJSON Program where
     parseJSON (Object obj)  = Program "" <$> obj .: "extensions" <*> obj .: "command"
     parseJSON value         = typeMismatch "Program" value
 
--- | The empty program (no extensions, and the command always fails).
+-- | The empty program (no extensions and the command always fails).
 emptyProgram :: Program
 emptyProgram = Program "" [] "false"
 
@@ -124,11 +127,11 @@ usesInputVariable = isInfixOf inputVariableName
 usesOutputVariable :: Text -> Bool
 usesOutputVariable = isInfixOf outputVariableName
 
--- | The input variable name, "{{input}}".
+-- | The input variable name, '{{input}}'.
 inputVariableName :: Text
 inputVariableName = "{{input}}"
 
--- | The output variable name, "{{output}}".
+-- | The output variable name, '{{output}}'.
 outputVariableName :: Text
 outputVariableName = "{{output}}"
 
