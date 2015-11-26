@@ -1,40 +1,32 @@
 
 {-|
 Module      : Git.Fmt.Pipes
-Description : Producers and consumers for formatting files.
+Description : Pipeline for formatting files.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Producers and consumers for formatting files.
+Pipeline for formatting files.
 -}
 
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Git.Fmt.Pipes (
-    -- * Producers
-    trackedFilePaths,
-
-    -- * Filters
-    filterFileSupported, filterFileExists,
-
-    -- * Transformers
-    zipTemporaryFilePath, runProgram, runDiff,
-
-    -- * Consumers
-    formatter, dryRunner,
+    -- * The pipeline
+    pipeline, consumer,
 ) where
 
+import Control.Monad.Except
 import Control.Monad.Extra
 import Control.Monad.Logger
 import Control.Monad.Reader
 
-import           Data.List.Extra (linesBy)
-import qualified Data.Text       as T
+import qualified Data.Text as T
 
 import Git.Fmt.Config
+import Git.Fmt.Options
 import Git.Fmt.Process
 
 import           Pipes
@@ -44,9 +36,14 @@ import System.Directory.Extra
 import System.Exit
 import System.FilePath
 
--- | Yields all tracked file paths in the current git repository.
-trackedFilePaths :: (MonadIO m, MonadLogger m) => Producer FilePath m ()
-trackedFilePaths = each =<< linesBy (== '\0') <$> lift (runProcess_ "git" ["ls-files", "-z"])
+-- | A pipeline that filters applicable paths, runs the user program on them and diffs them.
+pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
+pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
+
+-- | A consumer for the given mode.
+consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
+consumer Normal = formatter
+consumer DryRun = dryRunner
 
 -- | Filters files that have languages supported by the config.
 filterFileSupported :: (MonadIO m, MonadReader Config m) => Pipe FilePath FilePath m ()
