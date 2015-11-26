@@ -1,22 +1,19 @@
 
 {-|
 Module      : Git.Fmt
-Description : Options and handler for the git-fmt command.
+Description : Handler for the git-fmt command.
 
 Copyright   : (c) Henry J. Wylde, 2015
 License     : BSD3
 Maintainer  : public@hjwylde.com
 
-Options and handler for the git-fmt command.
+Handler for the git-fmt command.
 -}
 
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Git.Fmt (
-    -- * Options
-    Options(..), Chatty(..), Mode(..),
-
     -- * Handle
     handle,
 ) where
@@ -36,6 +33,7 @@ import Data.Tuple.Extra (fst3)
 
 import Git.Fmt.Config  as Config
 import Git.Fmt.Exit
+import Git.Fmt.Options
 import Git.Fmt.Pipes
 import Git.Fmt.Process
 
@@ -47,24 +45,6 @@ import           Prelude          hiding (read)
 import System.Directory.Extra
 import System.Exit
 import System.IO.Temp
-
--- | Options.
-data Options = Options {
-        optChatty  :: Chatty,
-        optNull    :: Bool,
-        optMode    :: Mode,
-        optThreads :: Maybe Int,
-        argPaths   :: [FilePath]
-    }
-    deriving (Eq, Show)
-
--- | Chattyness level.
-data Chatty = Default | Quiet | Verbose
-    deriving (Eq, Show)
-
--- | Run mode.
-data Mode = Normal | DryRun
-    deriving (Eq, Show)
 
 -- | Builds the files according to the options.
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()

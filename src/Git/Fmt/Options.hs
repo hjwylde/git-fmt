@@ -11,7 +11,10 @@ Optparse utilities.
 -}
 
 module Git.Fmt.Options (
-    -- * Optparse for GitFmt
+    -- * Options
+    Options(..), Chatty(..), Mode(..),
+
+    -- * Optparse
     gitFmtPrefs, gitFmtInfo, gitFmt,
 ) where
 
@@ -21,8 +24,25 @@ import Data.Version (showVersion)
 import Options.Applicative
 import Options.Applicative.Types (readerAsk)
 
-import Git.Fmt
 import Git.Fmt.Version as This
+
+-- | Options.
+data Options = Options {
+        optChatty  :: Chatty,
+        optNull    :: Bool,
+        optMode    :: Mode,
+        optThreads :: Maybe Int,
+        argPaths   :: [FilePath]
+    }
+    deriving (Eq, Show)
+
+-- | Chattyness level.
+data Chatty = Default | Quiet | Verbose
+    deriving (Eq, Show)
+
+-- | Run mode.
+data Mode = Normal | DryRun
+    deriving (Eq, Show)
 
 -- | The default preferences.
 --   Limits the help output to 100 columns.

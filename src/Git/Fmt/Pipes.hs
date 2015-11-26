@@ -48,13 +48,17 @@ import System.FilePath
 trackedFilePaths :: (MonadIO m, MonadLogger m) => Producer FilePath m ()
 trackedFilePaths = each =<< linesBy (== '\0') <$> lift (runProcess_ "git" ["ls-files", "-z"])
 
+-- | Filters files that have languages supported by the config.
 filterFileSupported :: (MonadIO m, MonadReader Config m) => Pipe FilePath FilePath m ()
 filterFileSupported = ask >>= \config -> Pipes.filter (supported config . T.toLower . T.pack . drop 1 . takeExtension)
 
+-- | Filters files that exist.
 filterFileExists :: (MonadIO m, MonadLogger m) => Pipe FilePath FilePath m ()
 filterFileExists = forever $ await >>= \filePath -> ifM (liftIO $ doesFileExist filePath)
     (yield filePath) (lift . logWarnN . T.pack $ filePath ++ ": not found")
 
+-- | Zips the file path with a temporary file path.
+--   The temporary file path is created by concatenating the given directory with the file path.
 zipTemporaryFilePath :: MonadIO m => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
 zipTemporaryFilePath tmpDir = Pipes.mapM $ \filePath -> do
     liftIO $ createDirectoryIfMissing True (takeDirectory $ tmpDir </> filePath)
