@@ -4,6 +4,9 @@
 
 *Major*
 * Restricted arguments to being inside the repository. ([#34](https://github.com/hjwylde/git-fmt/issues/34))
+* Refactored library to use pipes. ([#32](https://github.com/hjwylde/git-fmt/issues/32))
+* Made `Options` and `Version` modules private. ([#62](https://github.com/hjwylde/git-fmt/issues/62))
+* Renamed library modules to `Omnifmt`. ([#62](https://github.com/hjwylde/git-fmt/issues/62))
 
 #### v0.2.2.0
 

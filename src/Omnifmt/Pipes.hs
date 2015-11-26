@@ -1,6 +1,6 @@
 
 {-|
-Module      : Git.Fmt.Pipes
+Module      : Omnifmt.Pipes
 Description : Pipeline for formatting files.
 
 Copyright   : (c) Henry J. Wylde, 2015
@@ -13,9 +13,15 @@ Pipeline for formatting files.
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Git.Fmt.Pipes (
-    -- * The pipeline
-    pipeline, consumer,
+module Omnifmt.Pipes (
+    -- * Filters
+    filterFileSupported, filterFileExists,
+
+    -- * Transformers
+    zipTemporaryFilePath, runProgram, runDiff,
+
+    -- * Consumers
+    formatter, dryRunner,
 ) where
 
 import Control.Monad.Except
@@ -25,9 +31,8 @@ import Control.Monad.Reader
 
 import qualified Data.Text as T
 
-import Git.Fmt.Config
-import Git.Fmt.Options
-import Git.Fmt.Process
+import Omnifmt.Config
+import Omnifmt.Process
 
 import           Pipes
 import qualified Pipes.Prelude as Pipes
@@ -35,15 +40,6 @@ import qualified Pipes.Prelude as Pipes
 import System.Directory.Extra
 import System.Exit
 import System.FilePath
-
--- | A pipeline that filters applicable paths, runs the user program on them and diffs them.
-pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
-pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
-
--- | A consumer for the given mode.
-consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
-consumer Normal = formatter
-consumer DryRun = dryRunner
 
 -- | Filters files that have languages supported by the config.
 filterFileSupported :: (MonadIO m, MonadReader Config m) => Pipe FilePath FilePath m ()

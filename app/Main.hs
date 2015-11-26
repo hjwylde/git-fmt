@@ -35,11 +35,12 @@ import qualified Data.Text.IO       as T
 import           Data.Time          (defaultTimeLocale, formatTime, getZonedTime)
 import           Data.Tuple.Extra   (fst3)
 
-import Git.Fmt.Config  as Config
-import Git.Fmt.Exit
 import Git.Fmt.Options
-import Git.Fmt.Pipes
-import Git.Fmt.Process
+
+import Omnifmt.Config  as Config
+import Omnifmt.Exit
+import Omnifmt.Pipes
+import Omnifmt.Process
 
 import Options.Applicative
 
@@ -105,6 +106,13 @@ providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (arg
 
 trackedFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => m [FilePath]
 trackedFilePaths = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
+
+pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
+pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
+
+consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
+consumer Normal = formatter
+consumer DryRun = dryRunner
 
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)
