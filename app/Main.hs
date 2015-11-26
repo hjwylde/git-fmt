@@ -106,6 +106,13 @@ providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (arg
 trackedFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => m [FilePath]
 trackedFilePaths = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
 
+pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
+pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
+
+consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
+consumer Normal = formatter
+consumer DryRun = dryRunner
+
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)
 filter Default  = filterLogger (\_ level -> level >= LevelInfo)
