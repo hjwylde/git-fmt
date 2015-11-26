@@ -50,6 +50,7 @@ import Prelude          hiding (filter, log)
 
 import System.Directory.Extra
 import System.Exit
+import System.FilePath
 import System.IO
 import System.IO.Temp
 import System.Log.FastLogger
@@ -93,10 +94,10 @@ handle options = do
     (output, input) <- liftIO $ spawn unbounded
 
     withSystemTempDirectory "git-fmt" $ \tmpDir -> do
-        runEffect $ each filePaths >-> toOutput output
+        runEffect $ each (map (\filePath -> omnifmt filePath (tmpDir </> filePath)) filePaths) >-> toOutput output
 
         Parallel.forM_ [1..numThreads] $ \_ ->
-            runEffect (fromInput input >-> pipeline tmpDir >-> consumer (optMode options))
+            runEffect (fromInput input >-> pipeline >-> runner (optMode options) >-> statusPrinter)
 
 providedFilePaths :: MonadIO m => Options -> m [FilePath]
 providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (argPaths options)
@@ -107,12 +108,17 @@ providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (arg
 trackedFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => m [FilePath]
 trackedFilePaths = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
 
-pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => FilePath -> Pipe FilePath (FilePath, FilePath) m ()
-pipeline tmpDir = filterFileSupported >-> filterFileExists >-> zipTemporaryFilePath tmpDir >-> runProgram >-> runDiff
+pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
+pipeline = checkFileSupported >-> checkFileExists >-> createPrettyFile >-> runProgram >-> checkFilePretty
+    where
+        createPrettyFile = select [Unknown] $ \item@(_, _, prettyFilePath) -> do
+            liftIO $ createDirectoryIfMissing True (takeDirectory prettyFilePath)
 
-consumer :: (MonadIO m, MonadLogger m) => Mode -> Consumer (FilePath, FilePath) m ()
-consumer Normal = formatter
-consumer DryRun = dryRunner
+            return item
+
+runner :: (MonadIO m, MonadLogger m) => Mode -> Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
+runner Normal = commit
+runner DryRun = cat
 
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)

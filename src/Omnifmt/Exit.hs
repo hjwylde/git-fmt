@@ -10,6 +10,8 @@ Maintainer  : public@hjwylde.com
 Extra exit utilities.
 -}
 
+{-# OPTIONS_HADDOCK hide #-}
+
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -30,6 +32,8 @@ panic :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => String -> m a
 panic error = logErrorN (pack error) >> throwError (ExitFailure 128)
 
 -- | Panics, logging the error to stderr and exiting fast with 128.
+--   Rather than exiting fast using a 'MonadError', this method uses 'exitWith'
+--   (@panic_ = runPanic . panic@).
 panic_ :: (MonadIO m, MonadLogger m) => String -> m a
 panic_ = runPanic . panic
 
