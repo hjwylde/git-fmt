@@ -1,6 +1,6 @@
 
 {-|
-Module      : Git.Fmt.Config
+Module      : Omnifmt.Config
 Description : Configuration data structures.
 
 Copyright   : (c) Henry J. Wylde, 2015
@@ -12,7 +12,7 @@ Configuration data structures.
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module Git.Fmt.Config (
+module Omnifmt.Config (
     -- * Config
     Config(..),
     emptyConfig, readConfig, nearestConfigFile, programFor, unsafeProgramFor, supported,

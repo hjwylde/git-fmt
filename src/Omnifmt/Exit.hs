@@ -1,6 +1,6 @@
 
 {-|
-Module      : Git.Fmt.Exit
+Module      : Omnifmt.Exit
 Description : Extra exit utilities.
 
 Copyright   : (c) Henry J. Wylde, 2015
@@ -13,7 +13,7 @@ Extra exit utilities.
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Git.Fmt.Exit (
+module Omnifmt.Exit (
     -- * Exiting
     panic, panic_, runPanic,
 ) where

@@ -1,6 +1,6 @@
 
 {-|
-Module      : Git.Fmt.Process
+Module      : Omnifmt.Process
 Description : System process utilities.
 
 Copyright   : (c) Henry J. Wylde, 2015
@@ -13,7 +13,7 @@ System process utilities.
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Git.Fmt.Process (
+module Omnifmt.Process (
     -- * Run
     runProcess, runProcess_, runCommand, runCommand_, runCreateProcess, runCreateProcess_,
 ) where
@@ -23,7 +23,7 @@ import Control.Monad.Logger
 
 import Data.Text hiding (unwords)
 
-import Git.Fmt.Exit
+import Omnifmt.Exit
 
 import           System.Exit
 import           System.Process.Extra (CmdSpec (..), CreateProcess)

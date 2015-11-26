@@ -1,6 +1,6 @@
 
 {-|
-Module      : Git.Fmt.Pipes
+Module      : Omnifmt.Pipes
 Description : Pipeline for formatting files.
 
 Copyright   : (c) Henry J. Wylde, 2015
@@ -13,7 +13,7 @@ Pipeline for formatting files.
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Git.Fmt.Pipes (
+module Omnifmt.Pipes (
     -- * Filters
     filterFileSupported, filterFileExists,
 
@@ -31,8 +31,8 @@ import Control.Monad.Reader
 
 import qualified Data.Text as T
 
-import Git.Fmt.Config
-import Git.Fmt.Process
+import Omnifmt.Config
+import Omnifmt.Process
 
 import           Pipes
 import qualified Pipes.Prelude as Pipes

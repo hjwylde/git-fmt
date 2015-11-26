@@ -54,10 +54,10 @@ executable git-fmt
 library
     hs-source-dirs: src/
     exposed-modules:
-        Git.Fmt.Config,
-        Git.Fmt.Exit,
-        Git.Fmt.Pipes,
-        Git.Fmt.Process
+        Omnifmt.Config,
+        Omnifmt.Exit,
+        Omnifmt.Pipes,
+        Omnifmt.Process
 
     default-language: Haskell2010
     other-extensions:

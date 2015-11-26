@@ -35,11 +35,12 @@ import qualified Data.Text.IO       as T
 import           Data.Time          (defaultTimeLocale, formatTime, getZonedTime)
 import           Data.Tuple.Extra   (fst3)
 
-import Git.Fmt.Config  as Config
-import Git.Fmt.Exit
 import Git.Fmt.Options
-import Git.Fmt.Pipes
-import Git.Fmt.Process
+
+import Omnifmt.Config  as Config
+import Omnifmt.Exit
+import Omnifmt.Pipes
+import Omnifmt.Process
 
 import Options.Applicative
 
