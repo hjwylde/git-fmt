@@ -27,7 +27,7 @@ import           Control.Monad.Parallel (MonadParallel (..))
 import qualified Control.Monad.Parallel as Parallel
 import           Control.Monad.Reader
 
-import           Data.List.Extra    (dropEnd, linesBy, lower, (\\))
+import           Data.List.Extra    (dropEnd, intersect, linesBy, lower)
 import           Data.Maybe         (fromJust, fromMaybe, isNothing)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
@@ -84,7 +84,9 @@ checkGitRepository = do
 
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
 handle options = do
-    filePaths <- runPanic $ liftM2 (\\) (initialFilePaths options) (providedFilePaths options)
+    filePaths <- runPanic $ if null (argPaths options)
+        then initialFilePaths options
+        else liftM2 intersect (initialFilePaths options) (providedFilePaths options)
 
     numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
         return $ fromMaybe numCapabilities (optThreads options)

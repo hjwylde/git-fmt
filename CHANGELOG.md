@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Revisions*
+* Fixed a bug where passing arguments didn't properly narrow down the operation files. ([#64](https://github.com/hjwylde/git-fmt/issues/64))
+
 #### v0.3.0.1
 
 *Revisions*
