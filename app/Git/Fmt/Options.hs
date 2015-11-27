@@ -12,7 +12,7 @@ Optparse utilities.
 
 module Git.Fmt.Options (
     -- * Options
-    Options(..), Chatty(..), Mode(..),
+    Options(..), Chatty(..), Mode(..), Reference,
 
     -- * Optparse
     gitFmtPrefs, gitFmtInfo, gitFmt,
@@ -28,11 +28,13 @@ import Git.Fmt.Version as This
 
 -- | Options.
 data Options = Options {
-        optChatty  :: Chatty,
-        optNull    :: Bool,
-        optMode    :: Mode,
-        optThreads :: Maybe Int,
-        argPaths   :: [FilePath]
+        optChatty           :: Chatty,
+        optNull             :: Bool,
+        optMode             :: Mode,
+        optOperateOnTracked :: Bool,
+        optOperateOn        :: Reference,
+        optThreads          :: Maybe Int,
+        argPaths            :: [FilePath]
     }
     deriving (Eq, Show)
 
@@ -43,6 +45,9 @@ data Chatty = Default | Quiet | Verbose
 -- | Run mode.
 data Mode = Normal | DryRun
     deriving (Eq, Show)
+
+-- | Git reference.
+type Reference = String
 
 -- | The default preferences.
 --   Limits the help output to 100 columns.
@@ -84,6 +89,15 @@ gitFmt = Options
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
         help "Specify the mode as either `normal' or `dry-run'"
+        ])
+    <*> switch (mconcat [
+        long "operate-on-tracked",
+        help "Operate on all tracked files (i.e., `git ls-files')"
+        ])
+    <*> strOption (mconcat [
+        long "operate-on", metavar "REF",
+        value "head", showDefault,
+        help "Operate on all files in the reference (i.e., `git diff REF --name-only')"
         ])
     <*> natOption (mconcat [
         long "threads", metavar "INT",

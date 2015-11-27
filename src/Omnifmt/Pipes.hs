@@ -142,7 +142,8 @@ commit = select [Ugly] $ \(_, uglyFilePath, prettyFilePath) -> do
 --   'Ugly' and 'Prettified' are logged using 'logInfoN'.
 --   'Unknown' and 'Error' are logged using 'logErrorN'.
 statusPrinter :: MonadLogger m => Consumer (Status, FilePath, FilePath) m ()
-statusPrinter = Pipes.mapM_ $ \(status, uglyFilePath, _) -> logFunction status (T.pack $ uglyFilePath ++ ": " ++ lower (show status))
+statusPrinter = Pipes.mapM_ $ \(status, uglyFilePath, _) ->
+    logFunction status (T.pack $ uglyFilePath ++ ": " ++ showStatus status)
     where
         logFunction Unknown     = logWarnN
         logFunction Unsupported = logDebugN
@@ -151,4 +152,7 @@ statusPrinter = Pipes.mapM_ $ \(status, uglyFilePath, _) -> logFunction status (
         logFunction Pretty      = logDebugN
         logFunction Ugly        = logInfoN
         logFunction Prettified  = logInfoN
+
+        showStatus NotFound = "not found"
+        showStatus status   = lower $ show status
 
