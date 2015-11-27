@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Minor*
+* Added timeout wrapper for the program command. ([#52](https://github.com/hjwylde/git-fmt/issues/52))
+
 #### v0.3.0.2
 
 *Revisions*
