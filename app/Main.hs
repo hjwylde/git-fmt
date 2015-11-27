@@ -94,8 +94,11 @@ handle options = do
     withSystemTempDirectory "git-fmt" $ \tmpDir -> do
         runEffect $ each (map (\filePath -> omnifmt filePath (tmpDir </> filePath)) filePaths) >-> toOutput output
 
+        liftIO performGC
+
         Parallel.forM_ [1..numThreads] $ \_ ->
-            runEffect (fromInput input >-> pipeline >-> runner (optMode options) >-> statusPrinter)
+            runEffect (fromInput input >-> pipeline >-> runner (optMode options) >-> statusPrinter) >>
+            liftIO performGC
 
 providedFilePaths :: MonadIO m => Options -> m [FilePath]
 providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (argPaths options)
