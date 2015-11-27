@@ -95,7 +95,7 @@ runProgram = select [Unknown] $ \item@(_, uglyFilePath, prettyFilePath) -> do
     config <- ask
     let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension uglyFilePath)
 
-    (exitCode, _, stderr) <- runCommand . T.unpack $ substitute (T.concat [command program, inputSuffix program, outputSuffix program]) [
+    (exitCode, _, stderr) <- runTimedCommand 10 . T.unpack $ substitute (T.concat [command program, inputSuffix program, outputSuffix program]) [
         (inputVariableName, T.pack uglyFilePath),
         (outputVariableName, T.pack prettyFilePath)
         ]
