@@ -10,8 +10,6 @@ Maintainer  : public@hjwylde.com
 Extra exit utilities.
 -}
 
-{-# OPTIONS_HADDOCK hide #-}
-
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
