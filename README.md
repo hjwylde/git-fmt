@@ -44,7 +44,28 @@ export PATH=$PATH:~/.cabal/bin
 
 The `git-fmt` binary wraps external pretty-printers and provides an interface for selecting files
     to prettify and performing dry-runs.
-Rather than repeating it here, have a read of `git fmt -h` for how to call it.
+
+**The basics:**
+
+`git-fmt` operates only on tracked git files (thus it respects the .gitignore implicitely).
+By default it operates on files in the index (i.e., `--operate-on head`).
+It is possible to operate on all tracked files (`--operate-on-tracked`) or on a specific reference
+    (`--operate-on REF`).
+The `REF` argument is passed directly into `git diff REF --name-only`, so you can even play with
+    ranges such as `master...`.
+
+Passing in arguments to `git-fmt` will narrow down the operation files.
+For example, `git-fmt --operate-on-tracked src/` will format all tracked files under `src/` and
+    `git-fmt --operate-on head src/` will format all files in the index under `src/`.
+
+`git-fmt` can run in two different modes, *normal* and *dry run*.
+Normal mode writes to (prettifies) all ugly files.
+Dry run mode outputs the ugly file names to *standard output*.
+
+**NB:** a third mode, *patch*, is in the making, see
+    [#23](https://github.com/hjwylde/git-fmt/issues/23) for details.
+
+Have a read of `git fmt -h` for more information on how to call it.
 
 #### Configuration
 

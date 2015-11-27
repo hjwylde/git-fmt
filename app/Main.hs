@@ -84,9 +84,7 @@ checkGitRepository = do
 
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
 handle options = do
-    filePaths <- runPanic $ if null (argPaths options)
-        then trackedFilePaths
-        else liftM2 (\\) trackedFilePaths (providedFilePaths options)
+    filePaths <- runPanic $ liftM2 (\\) (initialFilePaths options) (providedFilePaths options)
 
     numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
         return $ fromMaybe numCapabilities (optThreads options)
@@ -105,8 +103,16 @@ providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (arg
         splitter = if optNull options then linesBy (== '\0') else (:[])
         expandDirectory path = ifM (liftIO $ doesDirectoryExist path) (liftIO $ listFilesRecursive path) (return [path])
 
+initialFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => Options -> m [FilePath]
+initialFilePaths options
+    | optOperateOnTracked options   = trackedFilePaths
+    | otherwise                     = refFilePaths $ optOperateOn options
+
 trackedFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => m [FilePath]
 trackedFilePaths = linesBy (== '\0') <$> runProcess_ "git" ["ls-files", "-z"]
+
+refFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => String -> m [FilePath]
+refFilePaths ref = linesBy (== '\0') <$> runProcess_ "git" ["diff", ref, "--name-only", "-z"]
 
 pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
 pipeline = checkFileSupported >-> checkFileExists >-> createPrettyFile >-> runProgram >-> checkFilePretty

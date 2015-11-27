@@ -8,10 +8,12 @@
 * Made `Options` and `Version` modules private. ([#62](https://github.com/hjwylde/git-fmt/issues/62))
 * Renamed library modules to `Omnifmt`. ([#62](https://github.com/hjwylde/git-fmt/issues/62))
 * Refactored pipeline to feed and consume triples. ([#61](https://github.com/hjwylde/git-fmt/issues/61))
+* Set default `--operate-on` to `head`. ([#28](https://github.com/hjwylde/git-fmt/issues/28))
 
 *Minor*
 * Changed "not found" status to print as debug message. ([#61](https://github.com/hjwylde/git-fmt/issues/61))
 * Added "unsupported" status as debug message. ([#61](https://github.com/hjwylde/git-fmt/issues/61))
+* Added `--operate-on-tracked` and `--operate-on REF` options. ([#28](https://github.com/hjwylde/git-fmt/issues/28))
 
 #### v0.2.2.0
 
