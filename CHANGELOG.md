@@ -2,6 +2,8 @@
 
 #### Upcoming
 
+#### v0.3.0.0
+
 *Major*
 * Restricted arguments to being inside the repository. ([#34](https://github.com/hjwylde/git-fmt/issues/34))
 * Refactored library to use pipes. ([#32](https://github.com/hjwylde/git-fmt/issues/32))
