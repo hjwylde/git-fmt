@@ -2,6 +2,8 @@
 
 #### Upcoming
 
+#### v0.3.0.1
+
 *Revisions*
 * Relaxed version constraints. ([#63](https://github.com/hjwylde/git-fmt/issues/63))
 
