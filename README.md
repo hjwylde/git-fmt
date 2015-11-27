@@ -47,25 +47,25 @@ The `git-fmt` binary wraps external pretty-printers and provides an interface fo
 
 **The basics:**
 
-`git-fmt` operates only on tracked git files (thus it respects the .gitignore implicitely).
+`git-fmt` operates only on tracked git files (thus it implicitly respects the .gitignore).
 By default it operates on files in the index (i.e., `--operate-on head`).
 It is possible to operate on all tracked files (`--operate-on-tracked`) or on a specific reference
     (`--operate-on REF`).
 The `REF` argument is passed directly into `git diff REF --name-only`, so you can even play with
     ranges such as `master...`.
 
-Passing in arguments to `git-fmt` will narrow down the operation files.
+Passing arguments to `git-fmt` will narrow down the operation files.
 For example, `git-fmt --operate-on-tracked src/` will format all tracked files under `src/` and
     `git-fmt --operate-on head src/` will format all files in the index under `src/`.
 
-`git-fmt` can run in two different modes, *normal* and *dry run*.
-Normal mode writes to (prettifies) all ugly files.
-Dry run mode outputs the ugly file names to *standard output*.
+`git-fmt` can run in two different modes, *normal* and *dry-run*.
+Normal mode (`--mode normal`) writes to (prettifies) all ugly files.
+Dry-run mode (`--mode dry-run`) outputs the ugly file paths to `stdout`.
 
 **NB:** a third mode, *patch*, is in the making, see
     [#23](https://github.com/hjwylde/git-fmt/issues/23) for details.
 
-Have a read of `git fmt -h` for more information on how to call it.
+For the more uncommon usage options, have a read of `git fmt -h`.
 
 #### Configuration
 
@@ -101,7 +101,7 @@ The extensions field is pretty self explanatory, but if you use the same extensi
 
 See the [docs/example-configs/](https://github.com/hjwylde/git-fmt/tree/master/docs/example-configs/)
     directory for some common pretty-printers and their corresponding omnifmt config (pull requests
-    welcome for more).
+    are welcome for adding more).
 Just don't forget to actually call the config file `.omnifmt.yaml`!
 
 **NB:** I haven't tested them fully, be careful in case one is buggy.
