@@ -54,6 +54,7 @@ data Status = Unknown       -- ^ The file has not been processed.
             | Error         -- ^ An error occurred somewhere.
             | Unsupported   -- ^ The file type is unsupported (i.e., no applicable 'Program').
             | NotFound      -- ^ The file could not be found.
+            | Timeout       -- ^ A command timed out.
             | Pretty        -- ^ The file is pretty.
             | Ugly          -- ^ The file is ugly.
             | Prettified    -- ^ The file is now pretty.
@@ -95,15 +96,17 @@ runProgram = select [Unknown] $ \item@(_, uglyFilePath, prettyFilePath) -> do
     config <- ask
     let program = unsafeProgramFor config (T.pack . drop 1 $ takeExtension uglyFilePath)
 
-    (exitCode, _, stderr) <- runTimedCommand 10 . T.unpack $ substitute (T.concat [command program, inputSuffix program, outputSuffix program]) [
+    (exitCode, _, stderr) <- runTimedCommand 5 . T.unpack $ substitute (T.concat [command program, inputSuffix program, outputSuffix program]) [
         (inputVariableName, T.pack uglyFilePath),
         (outputVariableName, T.pack prettyFilePath)
         ]
 
-    if exitCode == ExitSuccess
-        then return item
-        else logDebugN (T.pack stderr) >>
-             return (Error, uglyFilePath, prettyFilePath)
+    case exitCode of
+        ExitSuccess     -> return item
+        ExitFailure 124 -> return (Timeout, uglyFilePath, prettyFilePath)
+        ExitFailure 137 -> return (Timeout, uglyFilePath, prettyFilePath)
+        _               -> logDebugN (T.pack stderr) >>
+                           return (Error, uglyFilePath, prettyFilePath)
     where
         inputSuffix program
             | usesInputVariable (command program)   = T.empty
@@ -140,15 +143,16 @@ commit = select [Ugly] $ \(_, uglyFilePath, prettyFilePath) -> do
 -- | Logs the status of each file.
 --   'Unsupported', 'NotFound' and 'Pretty' are logged using 'logDebugN'.
 --   'Ugly' and 'Prettified' are logged using 'logInfoN'.
---   'Unknown' and 'Error' are logged using 'logErrorN'.
+--   'Unknown', 'Error' and 'Timeout' are logged using 'logWarnN'.
 statusPrinter :: MonadLogger m => Consumer (Status, FilePath, FilePath) m ()
 statusPrinter = Pipes.mapM_ $ \(status, uglyFilePath, _) ->
     logFunction status (T.pack $ uglyFilePath ++ ": " ++ showStatus status)
     where
         logFunction Unknown     = logWarnN
+        logFunction Error       = logWarnN
         logFunction Unsupported = logDebugN
         logFunction NotFound    = logDebugN
-        logFunction Error       = logWarnN
+        logFunction Timeout     = logWarnN
         logFunction Pretty      = logDebugN
         logFunction Ugly        = logInfoN
         logFunction Prettified  = logInfoN
