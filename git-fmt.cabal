@@ -1,5 +1,5 @@
 name:           git-fmt
-version:        0.3.0.0
+version:        0.3.0.1
 
 author:         Henry J. Wylde
 maintainer:     public@hjwylde.com
@@ -36,21 +36,21 @@ executable git-fmt
         MultiParamTypeClasses
         OverloadedStrings
     build-depends:
-        base == 4.8.*,
-        exceptions == 0.8.*,
-        extra == 1.4.*,
-        fast-logger == 2.4.*,
-        filepath == 1.4.*,
+        base >= 4.8 && < 5,
+        exceptions >= 0.8,
+        extra >= 1.4,
+        fast-logger >= 2.4,
+        filepath >= 1.4,
         git-fmt,
-        mtl == 2.2.*,
-        monad-logger == 0.3.*,
-        monad-parallel == 0.7.*,
-        optparse-applicative == 0.11.*,
-        pipes == 4.1.*,
-        pipes-concurrency == 2.0.*,
-        temporary == 1.2.*,
-        text == 1.2.*,
-        time == 1.5.*
+        mtl >= 2.2,
+        monad-logger >= 0.3,
+        monad-parallel >= 0.7,
+        optparse-applicative >= 0.11,
+        pipes >= 4.1,
+        pipes-concurrency >= 2.0,
+        temporary >= 1.2,
+        text >= 1.2,
+        time >= 1.5
 
 library
     hs-source-dirs: src/
@@ -67,14 +67,14 @@ library
         OverloadedStrings
         TupleSections
     build-depends:
-        aeson >= 0.8 && < 0.10,
-        base == 4.8.*,
-        extra == 1.4.*,
-        filepath == 1.4.*,
-        monad-logger == 0.3.*,
-        mtl == 2.2.*,
-        pipes == 4.1.*,
-        text == 1.2.*,
-        unordered-containers == 0.2.*,
-        yaml == 0.8.*
+        aeson >= 0.8,
+        base >= 4.8 && < 5,
+        extra >= 1.4,
+        filepath >= 1.4,
+        monad-logger >= 0.3,
+        mtl >= 2.2,
+        pipes >= 4.1,
+        text >= 1.2,
+        unordered-containers >= 0.2,
+        yaml >= 0.8
 
