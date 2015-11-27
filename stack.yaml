@@ -1,4 +1,4 @@
-resolver: lts-3.12
+resolver: lts-3.15
 ghc-options:
     git-fmt: -Werror -Wall -fno-warn-name-shadowing
 
