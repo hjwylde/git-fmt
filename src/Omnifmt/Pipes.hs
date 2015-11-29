@@ -24,10 +24,8 @@ module Omnifmt.Pipes (
     omnifmt,
 
     -- * Transformers
-    select, checkFileSupported, checkFileExists, runProgram, checkFilePretty, commit,
-
-    -- * Consumers
-    statusPrinter,
+    select, checkFileSupported, checkFileExists, runProgram, checkFilePretty, commit, diff,
+    printFileStatus,
 ) where
 
 import Control.Monad.Except
@@ -36,6 +34,7 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 
 import           Data.List.Extra  (lower)
+import           Data.Text        (Text)
 import qualified Data.Text        as T
 import           Data.Tuple.Extra (fst3)
 
@@ -140,23 +139,19 @@ commit = select [Ugly] $ \(_, uglyFilePath, prettyFilePath) -> do
 
     return (Prettified, uglyFilePath, prettyFilePath)
 
--- | Logs the status of each file.
---   'Unsupported', 'NotFound' and 'Pretty' are logged using 'logDebugN'.
---   'Ugly' and 'Prettified' are logged using 'logInfoN'.
---   'Unknown', 'Error' and 'Timeout' are logged using 'logWarnN'.
-statusPrinter :: MonadLogger m => Consumer (Status, FilePath, FilePath) m ()
-statusPrinter = Pipes.mapM_ $ \(status, uglyFilePath, _) ->
-    logFunction status (T.pack $ uglyFilePath ++ ": " ++ showStatus status)
-    where
-        logFunction Unknown     = logWarnN
-        logFunction Error       = logWarnN
-        logFunction Unsupported = logDebugN
-        logFunction NotFound    = logDebugN
-        logFunction Timeout     = logWarnN
-        logFunction Pretty      = logDebugN
-        logFunction Ugly        = logInfoN
-        logFunction Prettified  = logInfoN
+diff :: (MonadIO m, MonadLogger m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
+diff = select [Ugly] $ \item@(_, uglyFilePath, prettyFilePath) -> do
+    (_, stdout, _) <- runProcess "git" ["diff", "--no-index", "--", uglyFilePath, prettyFilePath]
 
+    liftIO $ putStr stdout
+
+    return item
+
+-- | Logs the status of each file using the given function.
+printFileStatus :: MonadLogger m => (Status -> Text -> m ()) -> Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
+printFileStatus f = Pipes.mapM_ $ \(status, uglyFilePath, _) ->
+    f status (T.pack $ uglyFilePath ++ ": " ++ showStatus status)
+    where
         showStatus NotFound = "not found"
         showStatus status   = lower $ show status
 
