@@ -4,6 +4,7 @@
 
 *Minor*
 * Added timeout wrapper for the program command. ([#52](https://github.com/hjwylde/git-fmt/issues/52))
+* Added `diff` mode. ([#23](https://github.com/hjwylde/git-fmt/issues/23))
 
 #### v0.3.0.3
 

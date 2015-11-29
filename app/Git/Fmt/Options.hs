@@ -42,7 +42,7 @@ data Chatty = Default | Quiet | Verbose
     deriving (Eq, Show)
 
 -- | Run mode.
-data Mode = Normal | DryRun
+data Mode = Normal | DryRun | Diff
     deriving (Eq, Show)
 
 -- | Operation files.
@@ -92,7 +92,7 @@ gitFmt = Options
     <*> modeOption (mconcat [
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
-        help "Specify the mode as either `normal' or `dry-run'"
+        help "Specify the mode as either `normal', `dry-run' or `diff'"
         ])
     <*> (
             flag' Tracked (mconcat [
@@ -120,5 +120,6 @@ gitFmt = Options
         modeOption  = option $ readerAsk >>= \opt -> case opt of
             "normal"    -> return Normal
             "dry-run"   -> return DryRun
+            "diff"      -> return Diff
             _           -> readerError $ "unrecognised mode `" ++ opt ++ "'"
 

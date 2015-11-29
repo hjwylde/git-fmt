@@ -29,6 +29,7 @@ import           Control.Monad.Reader
 
 import           Data.List.Extra    (dropEnd, intersect, linesBy, lower)
 import           Data.Maybe         (fromJust, fromMaybe, isNothing)
+import           Data.Text          (Text)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO       as T
@@ -44,9 +45,10 @@ import Omnifmt.Process
 
 import Options.Applicative
 
-import Pipes
-import Pipes.Concurrent
-import Prelude          hiding (filter, log)
+import           Pipes
+import           Pipes.Concurrent
+import qualified Pipes.Prelude    as Pipes
+import           Prelude          hiding (filter, log)
 
 import System.Directory.Extra
 import System.Exit
@@ -63,9 +65,9 @@ instance MonadParallel m => MonadParallel (LoggingT m) where
 main :: IO ()
 main = do
     options     <- customExecParser gitFmtPrefs gitFmtInfo
-    let chatty  = optChatty options
+    let chatty  = if optMode options == Diff then Quiet else optChatty options
 
-    flip runLoggingT (log chatty) . filter chatty $ do
+    flip runLoggingT (log $ optChatty options) . filter chatty $ do
         checkGitRepository
 
         mFilePath <- Config.nearestConfigFile "."
@@ -99,7 +101,7 @@ handle options = do
         liftIO performGC
 
         Parallel.forM_ [1..numThreads] $ \_ ->
-            runEffect (fromInput input >-> pipeline >-> runner (optMode options) >-> statusPrinter) >>
+            runEffect (fromInput input >-> pipeline >-> runner (optMode options)) >>
             liftIO performGC
 
 providedFilePaths :: MonadIO m => Options -> m [FilePath]
@@ -121,9 +123,16 @@ pipeline = checkFileSupported >-> checkFileExists >-> createPrettyFile >-> runPr
 
             return item
 
-runner :: (MonadIO m, MonadLogger m) => Mode -> Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
-runner Normal = commit
-runner DryRun = cat
+runner :: (MonadIO m, MonadLogger m) => Mode -> Consumer (Status, FilePath, FilePath) m ()
+runner Normal   = commit    >-> printFileStatus logFunction >-> Pipes.drain
+runner DryRun   = cat       >-> printFileStatus logFunction >-> Pipes.drain
+runner Diff     = diff      >-> Pipes.drain
+
+logFunction :: MonadLogger m => Status -> Text -> m ()
+logFunction status
+    | status `elem` [Unknown, Error, Timeout]       = logWarnN
+    | status `elem` [Unsupported, NotFound, Pretty] = logDebugN
+    | otherwise                                     = logInfoN
 
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)

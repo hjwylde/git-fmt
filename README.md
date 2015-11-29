@@ -62,14 +62,24 @@ Passing arguments to `git-fmt` will narrow down the operation files.
 For example, `git fmt --operate-on-tracked src/` will format all tracked files under `src/` and
     `git fmt --operate-on head src/` will format all files in the index under `src/`.
 
-`git-fmt` can run in two different modes, *normal* and *dry-run*.
-Normal mode (`--mode normal`) writes to (prettifies) all ugly files.
-Dry-run mode (`--mode dry-run`) outputs the ugly file paths to `stdout`.
+**Modes:**
 
-**NB:** a third mode, *patch*, is in the making, see
-    [#23](https://github.com/hjwylde/git-fmt/issues/23) for details.
+`git-fmt` can run in three different modes, *normal*, *dry-run* and *diff*.
 
-For the more uncommon options, have a read of `git fmt -h`.
+Normal mode is triggered by setting `--mode normal`.
+It writes to (prettifies) all ugly files immediately and outputs the prettified file paths to
+    `stdout`.
+
+Dry-run mode is triggered by setting `--mode dry-run`.
+It outputs the ugly file paths to `stdout`.
+
+Diff mode is triggered by setting `--mode diff`.
+It outputs a diff of all ugly files with their prettified version.
+By default the diff isn't paged, so to get output similar to `git diff` or `git log` it is
+    recommended to use `[-p|--paginate]` with this mode, e.g., `git -p fmt -m diff`.
+
+**NB:** it isn't possible to pipe the diff into `git apply` due to the destination file path
+    header.
 
 #### Configuration
 
