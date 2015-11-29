@@ -4,6 +4,7 @@
 
 *Revisions*
 * Restricted use of `--operate-on-tracked` and `--operate-on REF` at the same time. ([#65](https://github.com/hjwylde/git-fmt/issues/65))
+* Removed long option for help text (as git overrides it for man pages). ([#65](https://github.com/hjwylde/git-fmt/issues/65))
 
 #### v0.3.0.2
 

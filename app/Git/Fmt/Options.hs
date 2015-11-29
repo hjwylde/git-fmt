@@ -59,6 +59,10 @@ gitFmtInfo :: ParserInfo Options
 gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
     where
         infoOptions = helper <*> version <*> numericVersion
+        helper = abortOption ShowHelpText $ mconcat [
+            short 'h', hidden,
+            help "Show this help text"
+            ]
         version = infoOption ("Version " ++ showVersion This.version) $ mconcat [
             long "version", short 'V', hidden,
             help "Show this binary's version"
