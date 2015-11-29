@@ -12,7 +12,7 @@ Optparse utilities.
 
 module Git.Fmt.Options (
     -- * Options
-    Options(..), Chatty(..), Mode(..), Reference,
+    Options(..), Chatty(..), Mode(..), Files(..),
 
     -- * Optparse
     gitFmtPrefs, gitFmtInfo, gitFmt,
@@ -28,13 +28,12 @@ import Git.Fmt.Version as This
 
 -- | Options.
 data Options = Options {
-        optChatty           :: Chatty,
-        optNull             :: Bool,
-        optMode             :: Mode,
-        optOperateOnTracked :: Bool,
-        optOperateOn        :: Reference,
-        optThreads          :: Maybe Int,
-        argPaths            :: [FilePath]
+        optChatty    :: Chatty,
+        optNull      :: Bool,
+        optMode      :: Mode,
+        optOperateOn :: Files,
+        optThreads   :: Maybe Int,
+        argPaths     :: [FilePath]
     }
     deriving (Eq, Show)
 
@@ -46,8 +45,9 @@ data Chatty = Default | Quiet | Verbose
 data Mode = Normal | DryRun
     deriving (Eq, Show)
 
--- | Git reference.
-type Reference = String
+-- | Operation files.
+data Files = Tracked | Reference String
+    deriving (Eq, Show)
 
 -- | The default preferences.
 --   Limits the help output to 100 columns.
@@ -72,7 +72,7 @@ gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
 gitFmt :: Parser Options
 gitFmt = Options
     <$> (
-        flag' Quiet (mconcat [
+            flag' Quiet (mconcat [
             long "quiet", short 'q', hidden,
             help "Be quiet"
             ])
@@ -90,15 +90,17 @@ gitFmt = Options
         value Normal, showDefaultWith $ const "normal",
         help "Specify the mode as either `normal' or `dry-run'"
         ])
-    <*> switch (mconcat [
-        long "operate-on-tracked",
-        help "Operate on all tracked files (i.e., `git ls-files')"
-        ])
-    <*> strOption (mconcat [
-        long "operate-on", metavar "REF",
-        value "head", showDefault,
-        help "Operate on all files in the reference (i.e., `git diff REF --name-only')"
-        ])
+    <*> (
+            flag' Tracked (mconcat [
+            long "operate-on-tracked",
+            help "Operate on all tracked files (i.e., `git ls-files')"
+            ])
+        <|> Reference <$> strOption (mconcat [
+            long "operate-on", metavar "REF",
+            value "head", showDefault,
+            help "Operate on all files in the reference (i.e., `git diff REF --name-only')"
+            ])
+        )
     <*> natOption (mconcat [
         long "threads", metavar "INT",
         value Nothing, showDefaultWith $ const "number of processors",
