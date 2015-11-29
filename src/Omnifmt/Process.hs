@@ -10,8 +10,6 @@ Maintainer  : public@hjwylde.com
 System process utilities.
 -}
 
-{-# OPTIONS_HADDOCK hide #-}
-
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
