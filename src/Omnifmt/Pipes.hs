@@ -139,6 +139,7 @@ commit = select [Ugly] $ \(_, uglyFilePath, prettyFilePath) -> do
 
     return (Prettified, uglyFilePath, prettyFilePath)
 
+-- | Prints out the diff of all ugly files to standard output.
 diff :: (MonadIO m, MonadLogger m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
 diff = select [Ugly] $ \item@(_, uglyFilePath, prettyFilePath) -> do
     (_, stdout, _) <- runProcess "git" ["diff", "--no-index", "--", uglyFilePath, prettyFilePath]
