@@ -3,8 +3,8 @@
 [![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/1.0.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/hjwylde/git-fmt.svg?branch=master)](https://travis-ci.org/hjwylde/git-fmt)
 [![Release](https://img.shields.io/github/release/hjwylde/git-fmt.svg)](https://github.com/hjwylde/git-fmt/releases/latest)
-[![git-fmt on Stackage LTS](http://stackage.org/package/git-fmt/badge/lts)](http://stackage.org/lts/package/git-fmt)
-[![git-fmt on Stackage Nightly](http://stackage.org/package/git-fmt/badge/nightly)](http://stackage.org/nightly/package/git-fmt)
+[![git-fmt on Stackage LTS](https://www.stackage.org/package/git-fmt/badge/lts)](https://www.stackage.org/lts/package/git-fmt)
+[![git-fmt on Stackage Nightly](https://www.stackage.org/package/git-fmt/badge/nightly)](https://www.stackage.org/nightly/package/git-fmt)
 
 (Side note: the formatting component of this project will eventually be split out and named omnifmt.)
 
