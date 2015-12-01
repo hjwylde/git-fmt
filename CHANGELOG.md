@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Revisions*
+* Fixed a bug in the nearest config file search algorithm. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+
 #### v0.3.0.3
 
 *Revisions*
