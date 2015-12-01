@@ -6,10 +6,10 @@
 [![git-fmt on Stackage LTS](https://www.stackage.org/package/git-fmt/badge/lts)](https://www.stackage.org/lts/package/git-fmt)
 [![git-fmt on Stackage Nightly](https://www.stackage.org/package/git-fmt/badge/nightly)](https://www.stackage.org/nightly/package/git-fmt)
 
-(Side note: the formatting component of this project will eventually be split out and named omnifmt.)
-
-git-fmt was created to make prettifying code easy.
-It adds a custom (easy to use) command to Git that formats code through external pretty-printers.
+Custom git command for formatting code.
+git-fmt provides a wrapper around [omnifmt](https://github.com/hjwylde/omnifmt),
+    an automatic code formatter.
+It adds the ability to operate on specific tracked files in the repository.
 
 Formatted code is:
 
@@ -48,6 +48,10 @@ The git-fmt binary provides an interface for selecting files and piping them thr
     pretty-printers.
 It supports both prettifying the files immediately and performing dry-runs to see which files are
     ugly.
+Given that it uses the [omnifmt](https://github.com/hjwylde/omnifmt) library underneath, the syntax
+    and features are quite similar.
+The main difference is that git-fmt restricts files to being tracked by the git repository and that
+    by default it only operates on files in the index.
 
 **The basics:**
 
@@ -66,54 +70,16 @@ For example, `git fmt --operate-on-tracked src/` will format all tracked files u
 
 git-fmt can run in three different modes, *normal*, *dry-run* and *diff*.
 
-Normal mode writes to (prettifies) all ugly files immediately and outputs the prettified file paths
-    to *stdout*.
-
-Dry-run mode outputs the ugly file paths to stdout.
-
-Diff mode outputs a diff of all ugly files with their prettified version.
+The normal and dry-run modes act the same as omnifmt.
+Diff mode however uses `git diff` as opposed to `diff`.
 By default the diff isn't paged, so to get output similar to `git diff` or `git log` it is
-    recommended to use `[-p|--paginate]` with this mode, e.g., `git -p fmt -m diff`.
+    recommended to use `[-p|--paginate]`, e.g., `git -p fmt -m diff`.
 
 **NB:** it isn't possible to pipe the diff into `git apply` due to the destination file path
     header.
 
 #### Configuration
 
-Configuration is done via an '.omnifmt.yaml' file in the git repository.
-The file contains a list of *programs* that link *extensions* to a prettifying *command*, e.g.,
-```yaml
-haskell:
-    extensions: ["hs", "lhs"]
-    command:    "stylish-haskell {{input}} > {{output}}"
-
-javascript:
-    extensions: ["js"]
-    command:    "js-beautify -f {{input}}"
-
-json:
-    extensions: ["json"]
-    command:    "json_pp"
-
-ruby:
-    extensions: ["rb"]
-    command:    "ruby-beautify"
-```
-
-Each command declares how to read the *input file* and how to write to the *output file*.
-If the input variable is omitted, the file contents are fed to the command through *stdin*.
-Likewise if the output variable is omitted, the pretty contents are read from stdout.
-The output file is used to compare whether the original was pretty or ugly before writing to it.
-
-The extensions field is pretty self explanatory, but if you use the same extension more than once
-    then precedence goes to the program defined first.
-
-#### Examples
-
-See the [docs/example-configs/](https://github.com/hjwylde/git-fmt/tree/master/docs/example-configs/)
-    directory for some common pretty-printers and their corresponding omnifmt config (pull requests
-    are welcome for adding more).
-Just don't forget to actually call the config file .omnifmt.yaml!
-
-**NB:** I haven't tested them fully, be careful in case one is buggy.
+git-fmt delegates to omnifmt for configuration, see
+    [here](https://github.com/hjwylde/git-fmt#configuration) for documentation and examples.
 

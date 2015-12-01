@@ -28,7 +28,7 @@ import qualified Control.Monad.Parallel as Parallel
 import           Control.Monad.Reader
 
 import           Data.List.Extra    (dropEnd, intersect, linesBy, lower)
-import           Data.Maybe         (fromJust, fromMaybe, isNothing)
+import Data.Maybe         (fromJust, fromMaybe, isNothing)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
@@ -37,6 +37,7 @@ import           Data.Time          (defaultTimeLocale, formatTime, getZonedTime
 import           Data.Tuple.Extra   (fst3)
 
 import Git.Fmt.Options
+import Git.Fmt.Pipes
 
 import Omnifmt.Config  as Config
 import Omnifmt.Exit
@@ -126,7 +127,7 @@ pipeline = checkFileSupported >-> checkFileExists >-> createPrettyFile >-> runPr
 runner :: (MonadIO m, MonadLogger m) => Mode -> Consumer (Status, FilePath, FilePath) m ()
 runner Normal   = commit    >-> printFileStatus logFunction >-> Pipes.drain
 runner DryRun   = cat       >-> printFileStatus logFunction >-> Pipes.drain
-runner Diff     = diff      >-> Pipes.drain
+runner Diff     = gitDiff   >-> Pipes.drain
 
 logFunction :: MonadLogger m => Status -> Text -> m ()
 logFunction status

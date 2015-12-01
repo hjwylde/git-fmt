@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Major*
+* Extracted omnifmt out to git@github.com:hjwylde/omnifmt. ([#41](https://github.com/hjwylde/git-fmt/issues/41))
+
 #### v0.3.1.0
 
 *Minor*

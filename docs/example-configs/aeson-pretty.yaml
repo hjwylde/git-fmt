@@ -1,5 +1,0 @@
-# https://github.com/informatikr/aeson-pretty
-json:
-    extensions: ["json"]
-    command:    "aeson-pretty"
-
