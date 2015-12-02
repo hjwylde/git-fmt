@@ -4,4 +4,6 @@ ghc-options:
 
 packages:
 - '.'
+extra-deps:
+- omnifmt-0.1.0.0
 

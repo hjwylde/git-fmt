@@ -28,7 +28,7 @@ import qualified Control.Monad.Parallel as Parallel
 import           Control.Monad.Reader
 
 import           Data.List.Extra    (dropEnd, intersect, linesBy, lower)
-import Data.Maybe         (fromJust, fromMaybe, isNothing)
+import           Data.Maybe         (fromJust, fromMaybe, isNothing)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
@@ -87,9 +87,12 @@ checkGitRepository = do
 
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
 handle options = do
-    filePaths <- runPanic $ if null (argPaths options)
+    rootDir         <- liftIO getCurrentDirectory
+    filePaths       <- runPanic $ if null (argPaths options)
         then initialFilePaths options
         else liftM2 intersect (initialFilePaths options) (providedFilePaths options)
+    absFilePaths    <- forM filePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
+        (liftIO $ canonicalizePath filePath) (return filePath)
 
     numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
         return $ fromMaybe numCapabilities (optThreads options)
@@ -97,7 +100,7 @@ handle options = do
     (output, input) <- liftIO $ spawn unbounded
 
     withSystemTempDirectory "git-fmt" $ \tmpDir -> do
-        runEffect $ each (map (\filePath -> omnifmt filePath (tmpDir </> filePath)) filePaths) >-> toOutput output
+        runEffect $ each (map (\filePath -> omnifmt (makeRelative rootDir filePath) (tmpDir </> dropDrive filePath)) absFilePaths) >-> toOutput output
 
         liftIO performGC
 
