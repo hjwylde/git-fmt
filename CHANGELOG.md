@@ -5,6 +5,7 @@
 *Revisions*
 * Fixed a bug causing the program to hang when not in the root directory. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
 * Fixed a bug that omitted searching the drive for a config file. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+* Fixed a bug where output files could be created outside of the temp directory. ([#68](https://github.com/hjwylde/git-fmt/issues/68))
 
 #### v0.3.0.3
 
