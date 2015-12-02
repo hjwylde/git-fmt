@@ -20,7 +20,7 @@ Formatted code is:
   formatting; diffs show only the real changes.
 * Uncontroversial: never have a debate about spacing or brace position ever again.
 
-(Bullet points taken from https://blog.golang.org/go-fmt-your-code.)
+(Bullet points taken from [https://blog.golang.org/go-fmt-your-code](https://blog.golang.org/go-fmt-your-code).)
 
 ### Installing
 

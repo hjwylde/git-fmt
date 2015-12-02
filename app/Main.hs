@@ -68,7 +68,8 @@ main = do
     let chatty  = if optMode options == Diff then Quiet else optChatty options
 
     flip runLoggingT (log $ optChatty options) . filter chatty $ do
-        checkGitRepository
+        exitCode <- fst3 <$> runProcess "git" ["rev-parse", "--show-toplevel"]
+        when (exitCode /= ExitSuccess) $ panic_ ".git/: not found"
 
         mFilePath <- Config.nearestConfigFile "."
         when (isNothing mFilePath) . panic_ $ Config.defaultFileName ++ ": not found"
@@ -77,12 +78,6 @@ main = do
         when (isNothing mConfig) . panic_ $ fromJust mFilePath ++ ": error"
 
         runReaderT (handle options) (fromJust mConfig)
-
-checkGitRepository :: (MonadIO m, MonadLogger m) => m ()
-checkGitRepository = do
-    exitCode <- fst3 <$> runProcess "git" ["rev-parse", "--show-toplevel"]
-
-    when (exitCode /= ExitSuccess) $ panic_ ".git/: not found"
 
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
 handle options = do
