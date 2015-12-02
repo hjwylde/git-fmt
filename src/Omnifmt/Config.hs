@@ -66,12 +66,10 @@ readConfig filePath = liftIO (decodeFileEither filePath) >>= \ethr -> case ethr 
     Right config    -> return $ Just config
 
 -- | Finds the nearest config file by searching from the given directory upwards.
---
---   TODO (hjw): fix the bug where it won't search the root directory.
 nearestConfigFile :: MonadIO m => FilePath -> m (Maybe FilePath)
 nearestConfigFile dir = liftIO (canonicalizePath dir) >>= \dir' -> findM (liftIO . doesFileExist) $ map (</> defaultFileName) (parents dir')
     where
-        parents dir' = takeWhile (\dir -> dir /= takeDrive dir) (iterate takeDirectory dir')
+        parents = reverse . scanl1 combine . splitDirectories
 
 -- | The file name of the default config, '.omnifmt.yaml'.
 defaultFileName :: FilePath
