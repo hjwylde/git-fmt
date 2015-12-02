@@ -2,11 +2,25 @@
 
 #### Upcoming
 
+#### v0.3.1.1
+
+*Revisions*
+* Fixed a bug causing the program to hang when not in the root directory. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+* Fixed a bug that omitted searching the drive for a config file. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+* Fixed a bug where output files could be created outside of the temp directory. ([#68](https://github.com/hjwylde/git-fmt/issues/68))
+
 #### v0.3.1.0
 
 *Minor*
 * Added timeout wrapper for the program command. ([#52](https://github.com/hjwylde/git-fmt/issues/52))
 * Added `diff` mode. ([#23](https://github.com/hjwylde/git-fmt/issues/23))
+
+#### v0.3.0.4
+
+*Revisions*
+* Fixed a bug causing the program to hang when not in the root directory. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+* Fixed a bug that omitted searching the drive for a config file. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+* Fixed a bug where output files could be created outside of the temp directory. ([#68](https://github.com/hjwylde/git-fmt/issues/68))
 
 #### v0.3.0.3
 
