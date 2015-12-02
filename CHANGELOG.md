@@ -2,6 +2,9 @@
 
 #### Upcoming
 
+*Revisions*
+* Fixed a bug causing the program to hang when not in the root directory. ([#66](https://github.com/hjwylde/git-fmt/issues/66))
+
 #### v0.3.0.3
 
 *Revisions*

@@ -69,9 +69,9 @@ readConfig filePath = liftIO (decodeFileEither filePath) >>= \ethr -> case ethr 
 --
 --   TODO (hjw): fix the bug where it won't search the root directory.
 nearestConfigFile :: MonadIO m => FilePath -> m (Maybe FilePath)
-nearestConfigFile dir = findM (liftIO . doesFileExist) $ map (</> defaultFileName) parents
+nearestConfigFile dir = liftIO (canonicalizePath dir) >>= \dir' -> findM (liftIO . doesFileExist) $ map (</> defaultFileName) (parents dir')
     where
-        parents = takeWhile (\dir -> dir /= takeDrive dir) (iterate takeDirectory dir)
+        parents dir' = takeWhile (\dir -> dir /= takeDrive dir) (iterate takeDirectory dir')
 
 -- | The file name of the default config, '.omnifmt.yaml'.
 defaultFileName :: FilePath
