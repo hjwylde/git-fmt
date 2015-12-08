@@ -16,7 +16,7 @@ matrix:
     - env: ARGS=""                      STACK_YAML=stack.yaml
     - env: ARGS="--resolver lts-3"      STACK_YAML=stack.yaml
     - env: ARGS="--resolver lts"        STACK_YAML=stack.yaml
-    - env: ARGS="--resolver nightly"    STACK_YAML=.travis/stack-nightly.yaml
+    - env: ARGS="--resolver nightly"    STACK_YAML=stack-nightly.yaml
 
 before_install:
 - mkdir -p ~/.local/bin

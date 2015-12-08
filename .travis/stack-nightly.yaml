@@ -1,8 +1,0 @@
-# Void as we use the --resolver flag with travis, but required for stack to parse this file
-resolver: lts-3.17
-ghc-options:
-    git-fmt: -Werror -Wall -fno-warn-name-shadowing
-
-packages:
-- '.'
-
