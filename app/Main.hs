@@ -91,8 +91,7 @@ handle options = do
     filePaths       <- runPanic $ if null (argPaths options)
         then initialFilePaths options
         else liftM2 intersect (initialFilePaths options) (providedFilePaths options)
-    absFilePaths    <- forM filePaths $ \filePath -> ifM (liftIO $ doesFileExist filePath)
-        (liftIO $ canonicalizePath filePath) (return filePath)
+    absFilePaths    <- filterM (liftIO . doesFileExist) filePaths >>= mapM (liftIO . canonicalizePath)
 
     numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
         return $ fromMaybe numCapabilities (optThreads options)
@@ -120,7 +119,7 @@ initialFilePaths options = linesBy (== '\0') <$> case optOperateOn options of
     Reference ref   -> runProcess_ "git" ["diff", ref, "--name-only", "-z"]
 
 pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
-pipeline = checkFileSupported >-> checkFileExists >-> createPrettyFile >-> runProgram >-> checkFilePretty
+pipeline = checkFileSupported >-> createPrettyFile >-> runProgram >-> checkFilePretty
     where
         createPrettyFile = select [Unknown] $ \item@(_, _, prettyFilePath) -> do
             liftIO $ createDirectoryIfMissing True (takeDirectory prettyFilePath)
@@ -134,9 +133,9 @@ runner Diff     = gitDiff   >-> Pipes.drain
 
 logFunction :: MonadLogger m => Status -> Text -> m ()
 logFunction status
-    | status `elem` [Unknown, Error, Timeout]       = logWarnN
-    | status `elem` [Unsupported, NotFound, Pretty] = logDebugN
-    | otherwise                                     = logInfoN
+    | status `elem` [Unknown, Error, Timeout]   = logWarnN
+    | status `elem` [Unsupported, Pretty]       = logDebugN
+    | otherwise                                 = logInfoN
 
 filter :: Chatty -> LoggingT m a -> LoggingT m a
 filter Quiet    = filterLogger (\_ level -> level >= LevelError)
