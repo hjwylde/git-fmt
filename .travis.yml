@@ -28,7 +28,7 @@ install:
 - stack --resolver lts install hlint stylish-haskell
 
 script:
-- stack $ARGS --stack-yaml $STACK_YAML --no-terminal --skip-ghc-check build --test --copy-bins
+- stack $ARGS --no-terminal --skip-ghc-check build --test --copy-bins
 - hlint .
 - git fmt -m dry-run --operate-on-tracked
 
