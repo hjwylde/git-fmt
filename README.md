@@ -81,5 +81,5 @@ By default the diff isn't paged, so to get output similar to `git diff` or `git 
 #### Configuration
 
 git-fmt delegates to omnifmt for configuration, see
-    [here](https://github.com/hjwylde/git-fmt#configuration) for documentation and examples.
+    [here](https://github.com/hjwylde/omnifmt#configuration) for documentation and examples.
 
