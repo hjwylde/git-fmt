@@ -38,6 +38,8 @@ import           Data.Text        (Text)
 import qualified Data.Text        as T
 import           Data.Tuple.Extra (fst3)
 
+import GHC.IO.Exception (IOErrorType (..))
+
 import Omnifmt.Config
 import Omnifmt.Process
 
@@ -47,6 +49,7 @@ import qualified Pipes.Prelude as Pipes
 import System.Directory.Extra
 import System.Exit
 import System.FilePath
+import System.IO.Error
 
 -- | A status for a file going through the omnifmt pipeline.
 data Status = Unknown       -- ^ The file has not been processed.
@@ -135,7 +138,11 @@ checkFilePretty = select [Unknown] $ \(_, uglyFilePath, prettyFilePath) -> do
 --   This function updates the status to 'Prettified'.
 commit :: MonadIO m => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
 commit = select [Ugly] $ \(_, uglyFilePath, prettyFilePath) -> do
-    liftIO $ renameFile prettyFilePath uglyFilePath
+    -- Try move the file, but if it's across a filesystem boundary then we may need to copy instead
+    liftIO $ renameFile prettyFilePath uglyFilePath `catchIOError` \e ->
+        if ioeGetErrorType e == UnsupportedOperation
+            then copyFile prettyFilePath uglyFilePath >> removeFile prettyFilePath
+            else ioError e
 
     return (Prettified, uglyFilePath, prettyFilePath)
 
