@@ -2,6 +2,10 @@
 
 #### Upcoming
 
+*Revisions*
+
+* Fixed a bug causing prettifying to fail across filesystem boundaries. ([#72](https://github.com/hjwylde/git-fmt/issues/72))
+
 #### v0.2.0.1
 
 *Revisions*
