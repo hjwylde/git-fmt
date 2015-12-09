@@ -38,7 +38,8 @@ import qualified Data.Text         as T
 import           Data.Yaml         (prettyPrintParseException)
 import           Data.Yaml.Include (decodeFileEither)
 
-import Git.Fmt.Config  as Config
+import GHC.IO.Exception (IOErrorType (..))
+import Git.Fmt.Config   as Config
 import Git.Fmt.Exit
 import Git.Fmt.Process
 
@@ -47,6 +48,7 @@ import Prelude hiding (read)
 import System.Directory.Extra hiding (withCurrentDirectory)
 import System.Exit
 import System.FilePath
+import System.IO.Error
 import System.IO.Temp
 
 -- | Options.
@@ -125,7 +127,11 @@ normal :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
 normal filePath tmpFilePath = do
     $(logInfo) $ T.pack (filePath ++ ": prettified")
 
-    liftIO $ renameFile tmpFilePath filePath
+    -- Try move the file, but if it's across a filesystem boundary then we may need to copy instead
+    liftIO $ renameFile tmpFilePath filePath `catchIOError` \e ->
+        if ioeGetErrorType e == UnsupportedOperation
+            then copyFile tmpFilePath filePath >> removeFile tmpFilePath
+            else ioError e
 
 dryRun :: (MonadIO m, MonadLogger m) => FilePath -> FilePath -> m ()
 dryRun filePath _ = $(logInfo) $ T.pack (filePath ++ ": ugly")
