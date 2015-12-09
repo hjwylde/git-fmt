@@ -1,5 +1,0 @@
-# https://github.com/beautify-web/js-beautify
-javascript:
-    extensions: ["js"]
-    command:    "js-beautify -f {{input}}"
-

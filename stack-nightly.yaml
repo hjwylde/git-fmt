@@ -1,9 +1,7 @@
-resolver: lts-3.17
+resolver: nightly-2015-12-08
 ghc-options:
     git-fmt: -Werror -Wall -fno-warn-name-shadowing
 
 packages:
 - '.'
-extra-deps:
-- omnifmt-0.2.1.1
 
