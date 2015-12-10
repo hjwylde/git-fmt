@@ -21,10 +21,11 @@ module Git.Fmt.Options (
 import Data.Char    (isDigit)
 import Data.Version (showVersion)
 
+import Git.Fmt.Version as This
+
+import Omnifmt.Config            as Config
 import Options.Applicative
 import Options.Applicative.Types (readerAsk)
-
-import Git.Fmt.Version as This
 
 -- | Options.
 data Options = Options {
@@ -56,21 +57,23 @@ gitFmtPrefs = prefs $ columns 100
 
 -- | An optparse parser of a git-fmt command.
 gitFmtInfo :: ParserInfo Options
-gitFmtInfo = info (infoOptions <*> gitFmt) fullDesc
+gitFmtInfo = info (infoOptions <*> gitFmt) (fullDesc <> progDesc')
     where
-        infoOptions = helper <*> version <*> numericVersion
-        helper = abortOption ShowHelpText $ mconcat [
+        infoOptions     = helper <*> version <*> numericVersion
+        helper          = abortOption ShowHelpText $ mconcat [
             short 'h', hidden,
             help "Show this help text"
             ]
-        version = infoOption ("Version " ++ showVersion This.version) $ mconcat [
+        version         = infoOption ("Version " ++ showVersion This.version) $ mconcat [
             long "version", short 'V', hidden,
             help "Show this binary's version"
             ]
-        numericVersion = infoOption (showVersion This.version) $ mconcat [
+        numericVersion  = infoOption (showVersion This.version) $ mconcat [
             long "numeric-version", hidden,
             help "Show this binary's version (without the prefix)"
             ]
+
+        progDesc' = progDesc $ "Formats the paths given by applying the rules found in the root `" ++ Config.defaultFileName ++ "'"
 
 -- | An options parser.
 gitFmt :: Parser Options
@@ -92,6 +95,7 @@ gitFmt = Options
     <*> modeOption (mconcat [
         long "mode", short 'm', metavar "MODE",
         value Normal, showDefaultWith $ const "normal",
+        completeWith ["normal", "dry-run", "diff"],
         help "Specify the mode as either `normal', `dry-run' or `diff'"
         ])
     <*> (
@@ -111,15 +115,16 @@ gitFmt = Options
         help "Specify the number of threads to use"
         ])
     <*> many (strArgument $ mconcat [
-        metavar "-- PATHS..."
+        metavar "-- PATHS...",
+        action "file"
         ])
     where
-        natOption   = option $ readerAsk >>= \opt -> if all isDigit opt
-            then return $ Just (read opt :: Int)
-            else readerError $ "not a natural number `" ++ opt ++ "'"
         modeOption  = option $ readerAsk >>= \opt -> case opt of
             "normal"    -> return Normal
             "dry-run"   -> return DryRun
             "diff"      -> return Diff
             _           -> readerError $ "unrecognised mode `" ++ opt ++ "'"
+        natOption   = option $ readerAsk >>= \opt -> if all isDigit opt
+            then return $ Just (read opt :: Int)
+            else readerError $ "not a natural number `" ++ opt ++ "'"
 

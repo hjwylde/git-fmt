@@ -10,6 +10,7 @@ Maintainer  : public@hjwylde.com
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_HADDOCK hide, prune #-}
 
+{-# LANGUAGE BangPatterns          #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -65,7 +66,7 @@ instance MonadParallel m => MonadParallel (LoggingT m) where
 
 main :: IO ()
 main = do
-    options     <- customExecParser gitFmtPrefs gitFmtInfo
+    !options    <- customExecParser gitFmtPrefs gitFmtInfo
     let chatty  = if optMode options == Diff then Quiet else optChatty options
 
     flip runLoggingT (log $ optChatty options) . filter chatty $ do

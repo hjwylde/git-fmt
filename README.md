@@ -83,3 +83,20 @@ By default the diff isn't paged, so to get output similar to `git diff` or `git 
 git-fmt delegates to omnifmt for configuration, see
     [here](https://github.com/hjwylde/omnifmt#configuration) for documentation and examples.
 
+### Auto-completion
+
+Add the following (depending on your shell) to include support for auto-completion.
+
+**Bash:**
+
+```bash
+source <(git-fmt --bash-completion-script `which git-fmt`)
+```
+
+**zsh:**
+
+```zsh
+autoload -Uz bashcompinit && bashcompinit
+source <(git-fmt --bash-completion-script `which git-fmt`)
+```
+
