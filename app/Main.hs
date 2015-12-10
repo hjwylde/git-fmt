@@ -28,7 +28,7 @@ import           Control.Monad.Parallel (MonadParallel (..))
 import qualified Control.Monad.Parallel as Parallel
 import           Control.Monad.Reader
 
-import           Data.List.Extra    (dropEnd, intersect, linesBy, lower)
+import           Data.List.Extra    (dropEnd, intersect, linesBy, lower, nub)
 import           Data.Maybe         (fromJust, fromMaybe, isNothing)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
@@ -40,7 +40,8 @@ import           Data.Tuple.Extra   (fst3)
 import Git.Fmt.Options
 import Git.Fmt.Pipes
 
-import Omnifmt.Config  as Config
+import Omnifmt.Config    as Config
+import Omnifmt.Directory
 import Omnifmt.Exit
 import Omnifmt.Pipes
 import Omnifmt.Process
@@ -52,7 +53,7 @@ import           Pipes.Concurrent
 import qualified Pipes.Prelude    as Pipes
 import           Prelude          hiding (filter, log)
 
-import System.Directory.Extra
+import System.Directory.Extra hiding (withCurrentDirectory)
 import System.Exit
 import System.FilePath
 import System.IO
@@ -83,19 +84,19 @@ main = do
 
 handle :: (MonadIO m, MonadLogger m, MonadMask m, MonadParallel m, MonadReader Config m) => Options -> m ()
 handle options = do
-    rootDir         <- liftIO getCurrentDirectory
-    filePaths       <- runPanic $ if null (argPaths options)
+    rootDir             <- runPanic $ init <$> runProcess_ "git" ["rev-parse", "--show-toplevel"]
+    absFilePaths        <- runPanic $ filterM (liftIO . doesFileExist) =<< if null (argPaths options)
         then initialFilePaths options
         else liftM2 intersect (initialFilePaths options) (providedFilePaths options)
-    absFilePaths    <- filterM (liftIO . doesFileExist) filePaths >>= mapM (liftIO . canonicalizePath)
+    let relFilePaths    = nub $ map (makeRelative rootDir) absFilePaths
 
     numThreads <- liftIO getNumCapabilities >>= \numCapabilities ->
         return $ fromMaybe numCapabilities (optThreads options)
 
     (output, input) <- liftIO $ spawn unbounded
 
-    withSystemTempDirectory "git-fmt" $ \tmpDir -> do
-        runEffect $ each (map (\filePath -> omnifmt (makeRelative rootDir filePath) (tmpDir </> dropDrive filePath)) absFilePaths) >-> toOutput output
+    withCurrentDirectory rootDir . withSystemTempDirectory "git-fmt" $ \tmpDir -> do
+        runEffect $ each (map (\filePath -> omnifmt filePath (tmpDir </> filePath)) relFilePaths) >-> toOutput output
 
         liftIO performGC
 
@@ -103,16 +104,19 @@ handle options = do
             runEffect (fromInput input >-> pipeline >-> runner (optMode options)) >>
             liftIO performGC
 
+initialFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => Options -> m [FilePath]
+initialFilePaths options = do
+    rootDir <- init <$> runProcess_ "git" ["rev-parse", "--show-toplevel"]
+
+    map (rootDir </>) . linesBy (== '\0') <$> case optOperateOn options of
+        Tracked         -> runProcess_ "git" ["ls-files", "-z", "--full-name", rootDir]
+        Reference ref   -> runProcess_ "git" ["diff", ref, "--name-only", "-z"]
+
 providedFilePaths :: MonadIO m => Options -> m [FilePath]
-providedFilePaths options = concatMapM expandDirectory $ concatMap splitter (argPaths options)
+providedFilePaths options = concatMapM (liftIO . canonicalizePath >=> expandDirectory) $ concatMap splitter (argPaths options)
     where
         splitter = if optNull options then linesBy (== '\0') else (:[])
         expandDirectory path = ifM (liftIO $ doesDirectoryExist path) (liftIO $ listFilesRecursive path) (return [path])
-
-initialFilePaths :: (MonadError ExitCode m, MonadIO m, MonadLogger m) => Options -> m [FilePath]
-initialFilePaths options = linesBy (== '\0') <$> case optOperateOn options of
-    Tracked         -> runProcess_ "git" ["ls-files", "-z"]
-    Reference ref   -> runProcess_ "git" ["diff", ref, "--name-only", "-z"]
 
 pipeline :: (MonadIO m, MonadLogger m, MonadReader Config m) => Pipe (Status, FilePath, FilePath) (Status, FilePath, FilePath) m ()
 pipeline = checkFileSupported >-> createPrettyFile >-> runProgram >-> checkFilePretty

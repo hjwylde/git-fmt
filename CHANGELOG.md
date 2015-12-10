@@ -6,6 +6,11 @@
 
 * Added bash completion for `--mode` and arguments. ([#71](https://github.com/hjwylde/git-fmt/issues/71))
 
+*Revisions*
+
+* Changed path outputs to be relative to the root directory. ([#69](https://github.com/hjwylde/git-fmt/issues/69))
+* Fixed a bug where `--operate-on` didn't work in subdirectories. ([#69](https://github.com/hjwylde/git-fmt/issues/69))
+
 #### v0.4.0.0
 
 *Major*
