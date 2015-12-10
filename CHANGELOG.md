@@ -2,6 +2,8 @@
 
 #### Upcoming
 
+#### v0.4.1.0
+
 *Minor*
 
 * Added bash completion for `--mode` and arguments. ([#71](https://github.com/hjwylde/git-fmt/issues/71))
