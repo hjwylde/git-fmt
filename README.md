@@ -100,3 +100,7 @@ autoload -Uz bashcompinit && bashcompinit
 source <(git-fmt --bash-completion-script `which git-fmt`)
 ```
 
+**NB:** auto-completion doesn't work well with git's command macro. I.e., `git fmt <TAB>` won't
+    work, but `git-fmt <TAB>` will. [#71](https://github.com/hjwylde/git-fmt/issues/71) will remain
+    open until this is addressed.
+
