@@ -3,8 +3,6 @@
 [![Project Status: Wip - Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](http://www.repostatus.org/badges/1.0.0/wip.svg)](http://www.repostatus.org/#wip)
 [![Build Status](https://travis-ci.org/hjwylde/git-fmt.svg?branch=master)](https://travis-ci.org/hjwylde/git-fmt)
 [![Release](https://img.shields.io/github/release/hjwylde/git-fmt.svg)](https://github.com/hjwylde/git-fmt/releases/latest)
-[![git-fmt on Stackage LTS](https://www.stackage.org/package/git-fmt/badge/lts)](https://www.stackage.org/lts/package/git-fmt)
-[![git-fmt on Stackage Nightly](https://www.stackage.org/package/git-fmt/badge/nightly)](https://www.stackage.org/nightly/package/git-fmt)
 
 Custom git command for formatting code.
 git-fmt provides a wrapper around [omnifmt](https://github.com/hjwylde/omnifmt),
