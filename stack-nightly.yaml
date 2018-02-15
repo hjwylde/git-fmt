@@ -1,7 +1,0 @@
-resolver: nightly-2015-12-08
-ghc-options:
-    git-fmt: -Werror -Wall -fno-warn-name-shadowing
-
-packages:
-- '.'
-
