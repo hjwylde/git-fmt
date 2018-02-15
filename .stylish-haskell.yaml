@@ -4,10 +4,8 @@ steps:
 - language_pragmas:
     style: vertical
     remove_redundant: true
-- records: {}
 - tabs:
     spaces: 4
 - trailing_whitespace: {}
 
 columns: 100
-

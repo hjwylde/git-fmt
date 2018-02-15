@@ -12,7 +12,6 @@ Pipeline for formatting files.
 
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TupleSections         #-}
 
 module Git.Fmt.Pipes (
     -- * Transformers
